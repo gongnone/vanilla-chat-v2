@@ -76,3 +76,26 @@ npx wrangler ai models --json | jq '
   .ga |= sort
 '
 ```
+
+
+# Testing Procedure
+
+For Real AI Testing During Development:
+
+# Terminal 1 - Auto-rebuild on changes:
+npm run dev:remote
+
+This watches your files and rebuilds automatically when you save. 
+
+# Terminal 2 - Deploy when ready to test:
+npm run preview:remote
+
+This quickly deploys your built files to a preview URL. 
+
+# So your workflow becomes:
+
+Start watch mode once: npm run dev:remote (leave running)
+Make your edits in your IDE
+Files auto-rebuild (watch mode detects changes)
+Deploy to test: npm run preview:remote (only when you want to test)
+Visit the preview URL to test with real AI

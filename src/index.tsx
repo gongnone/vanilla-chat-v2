@@ -110,17 +110,36 @@ app.get("/", (c) => {
 app.post("/api/chat", async (c) => {
   const payload = await c.req.json();
   const messages = [...payload.messages];
+
   // Prepend the systemMessage
   if (payload?.config?.systemMessage) {
     messages.unshift({ role: "system", content: payload.config.systemMessage });
   }
-  //console.log("Model", payload.config.model);
-  //console.log("Messages", JSON.stringify(messages));
+
+  // Check if AI binding is available (it won't be in local dev)
+  if (!c.env?.AI) {
+    console.warn("⚠️  AI binding not available - using mock response for local development");
+    console.log("📝 To use real AI, deploy with: npm run deploy");
+
+    // Return a mock streaming response for local development
+    return streamText(c, async (stream) => {
+      const mockResponse = `**Local Development Mode**\n\nCloudflare Workers AI is not available in local development. This is a mock response.\n\n**Your message was:** "${messages[messages.length - 1].content}"\n\n**To use real AI:**\n1. Deploy: \`npm run deploy\`\n2. Visit your deployed URL\n\n**Model requested:** ${payload.config.model}`;
+
+      // Simulate streaming by writing character by character
+      for (const char of mockResponse) {
+        stream.write(char);
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    });
+  }
+
+  // Production code with real AI
   let eventSourceStream;
   let retryCount = 0;
   let successfulInference = false;
   let lastError;
   const MAX_RETRIES = 3;
+
   while (successfulInference === false && retryCount < MAX_RETRIES) {
     try {
       eventSourceStream = (await c.env.AI.run(payload.config.model, {
@@ -135,12 +154,14 @@ app.post("/api/chat", async (c) => {
       console.log(`Retrying #${retryCount}...`);
     }
   }
+
   if (eventSourceStream === undefined) {
     if (lastError) {
       throw lastError;
     }
     throw new Error(`Problem with model`);
   }
+
   // EventSource stream is handy for local event sources, but we want to just stream text
   const tokenStream = eventSourceStream
     .pipeThrough(new TextDecoderStream())
