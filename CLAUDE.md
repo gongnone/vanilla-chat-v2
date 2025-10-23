@@ -161,7 +161,7 @@ Accept that local dev cannot test real AI. Solutions:
 
 ## Testing with Playwright MCP
 
-This project has Playwright MCP server installed for automated browser testing and E2E testing of the chat interface.
+This project has Playwright MCP server installed for automated browser testing and E2E testing of the chat interface. READ THE TESTING.md FILE FOR DETAILED INSTRUCTIONS. Always use the Playwright MCP to test the UI functionality.
 
 ### MCP Configuration
 
