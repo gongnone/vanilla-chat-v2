@@ -1,0 +1,10 @@
+{
+  "claude.mcpServers": {
+    "playwright": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/@executeautomation/playwright-mcp-server/dist/index.js"
+      ]
+    }
+  }
+}

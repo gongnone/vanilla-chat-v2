@@ -158,3 +158,67 @@ Accept that local dev cannot test real AI. Solutions:
 ### Dependencies
 - Uses CDN resources (markdown-it, highlight.js) - avoid bundling these
 - Minimal dependencies by design - think twice before adding new ones
+
+## Testing with Playwright MCP
+
+This project has Playwright MCP server installed for automated browser testing and E2E testing of the chat interface.
+
+### MCP Configuration
+
+Add to Claude Code MCP settings (Command Palette → "Claude Code: Open MCP Settings"):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "node",
+      "args": [
+        "/Users/williamshaw/vanilla/vanilla-chat-v2/node_modules/@executeautomation/playwright-mcp-server/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+Or use npx for a global approach:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ]
+    }
+  }
+}
+```
+
+### Available Playwright Tools via MCP
+
+Once configured, you can use Playwright MCP to:
+- **Navigate**: Visit deployed URLs (local or preview/production)
+- **Screenshot**: Capture visual state of the chat interface
+- **Click/Type**: Interact with chat input, send messages
+- **Evaluate**: Run JavaScript in browser context to inspect state
+- **Wait**: Wait for AI responses to stream in
+- **Assert**: Verify chat messages appear correctly
+
+### Example Testing Workflow
+
+1. Deploy preview: `npm run preview:remote`
+2. Use Playwright MCP to navigate to preview URL
+3. Screenshot initial state
+4. Type message in chat input
+5. Click send button
+6. Wait for streaming response
+7. Screenshot final state
+8. Verify markdown rendering worked
+
+### Limitations
+
+- Can only test **deployed** versions (preview or production)
+- Cannot test local dev (`npm run dev`) because AI is mocked
+- For real E2E testing, use `npm run preview:remote` first
