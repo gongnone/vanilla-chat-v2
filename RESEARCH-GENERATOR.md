@@ -5,7 +5,7 @@ Comprehensive market research and offer design tool powered by Cloudflare Worker
 ## Features
 
 - **18-Field Context Collection** - 3-step wizard form captures complete business context
-- **AI-Powered Analysis** - Generates ~7,500 word (10,000 token) comprehensive market research reports
+- **AI-Powered Analysis** - Generates ~6,000 word (8,000 token) comprehensive market research reports
 - **Comprehensive Coverage** - 7 research phases from market validation to offer design
 - **Streaming Results** - Real-time report generation with live markdown rendering
 - **Quality Validation** - Client-side checks ensure detailed inputs for better outputs
@@ -119,12 +119,13 @@ public/static/
 
 Request body: `BusinessContext` object with all 18 fields
 
-Response: Streaming markdown report (10,000 tokens = ~7,500 words)
+Response: Streaming markdown report (8,000 tokens = ~6,000 words)
 
 AI Configuration:
 - Model: `@cf/meta/llama-3.1-70b-instruct`
-- max_tokens: 10,000
-- Context window: 128,000 tokens
+- max_tokens: 8,000 (reduced to fit within 24K context window)
+- Context window: 24,000 tokens (model limit)
+- Typical usage: ~15K input + 8K output = ~23K total
 
 ### Local Development
 
@@ -157,14 +158,14 @@ Visit: `https://vanilla-chat-demo-tmpl-al4.pages.dev/research`
 
 ## Cost Estimates
 
-- **Per Report:** ~$0.16 (10,000 output tokens + 6,000 input tokens)
+- **Per Report:** ~$0.13 (8,000 output tokens + 5,000 input tokens)
 - **Monthly (100 reports):** ~$16
 - **No additional services required** (uses existing Workers AI binding)
 
 **Token Breakdown:**
-- Input: ~6,000 tokens (prompt) = $0.06
-- Output: 10,000 tokens (report) = $0.10
-- Total: ~$0.16 per comprehensive report
+- Input: ~5,000 tokens (prompt) = $0.05
+- Output: 8,000 tokens (report) = $0.08
+- Total: ~$0.13 per comprehensive report
 
 ## Tips for Best Results
 
@@ -211,16 +212,16 @@ Reports are structured markdown with:
 - Ensure minimum lengths for detailed fields
 
 **"Generation taking too long"**
-- Reports can take 10-15 minutes (10,000 tokens = ~7,500 words)
+- Reports can take 8-12 minutes (8,000 tokens = ~6,000 words)
 - Don't close the browser window
 - Check browser console for errors
 - Use `wrangler pages deployment tail` to see real-time progress logs
 
 **"Report cut off or too short"**
-- Default was 256 tokens (now fixed to 10,000)
+- Default was 256 tokens (now fixed to 8,000)
 - Check logs to confirm max_tokens setting
 - Actual output may vary based on AI's assessment of prompt
-- Most reports generate 7,000-9,000 tokens
+- Most reports generate 6,000-8,000 tokens depending on complexity
 
 ## Future Enhancements
 

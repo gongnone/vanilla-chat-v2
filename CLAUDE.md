@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Cloudflare Pages** application that provides a web-based chat interface for exploring Cloudflare Workers AI text generation models. It uses Hono as the web framework, Vite for building, and Tailwind CSS for styling.
+This is a **Cloudflare Pages** application with two main features:
+
+1. **Chat Interface** (`/`) - Interactive chat for exploring Cloudflare Workers AI text generation models
+2. **Market Intelligence Generator** (`/research`) - Comprehensive market research report generator for businesses
+
+Built with Hono web framework, Vite for building, and Tailwind CSS for styling.
 
 **Critical Architecture Constraint**: Cloudflare Workers AI bindings **cannot run in local development**. The AI service requires remote execution on Cloudflare's infrastructure.
 
@@ -71,7 +76,11 @@ npx wrangler ai models --json | jq 'reduce .[] as $item ({beta: [], ga: []}; if 
 
 2. **Server-side** (`src/index.tsx`):
    - Hono app with JSX renderer
-   - Single route: `POST /api/chat`
+   - Routes:
+     - `GET /` - Chat interface
+     - `POST /api/chat` - Chat API endpoint
+     - `GET /research` - Market Intelligence Generator form
+     - `POST /api/research` - Research report generation API
    - Streams AI responses using `hono/streaming`
    - Parses Server-Sent Events from Workers AI
    - Falls back to mock responses when `c.env.AI` is unavailable
@@ -85,21 +94,27 @@ npx wrangler ai models --json | jq 'reduce .[] as $item ({beta: [], ga: []}; if 
 
 ```
 src/
-  index.tsx       - Hono app, main entry point, /api/chat endpoint
-  renderer.tsx    - JSX renderer for HTML shell
-  style.css       - Tailwind input file
-  global.d.ts     - TypeScript declarations
+  index.tsx                      - Hono app, main entry point, all routes
+  renderer.tsx                   - JSX renderer for HTML shell
+  style.css                      - Tailwind input file
+  global.d.ts                    - TypeScript declarations
+  types.ts                       - TypeScript interfaces (BusinessContext)
+  components/
+    research-form.tsx            - Market Intelligence form component
+  prompts/
+    master-research-prompt.ts    - Research report prompt template
 
 public/
   static/
-    script.js     - Client-side chat logic, model list
-    style.css     - Compiled Tailwind output (generated)
+    script.js                    - Client-side chat logic, model list
+    research.js                  - Client-side research form logic
+    style.css                    - Compiled Tailwind output (generated)
     cloudflare-logo.png
   favicon.ico
 
-dist/              - Build output (generated)
-  _worker.js       - Compiled Hono worker
-  static/          - Static assets
+dist/                            - Build output (generated)
+  _worker.js                     - Compiled Hono worker
+  static/                        - Static assets
 ```
 
 ### AI Binding Configuration
@@ -127,12 +142,21 @@ The code in `src/index.tsx` detects missing AI binding and returns mock response
 
 ### Streaming Implementation
 
-The `/api/chat` endpoint:
+Both API endpoints use the same streaming pattern:
+
+**`/api/chat` endpoint:**
 1. Calls `c.env.AI.run(model, { messages, stream: true })`
 2. Receives Server-Sent Events stream
 3. Pipes through `EventSourceParserStream` to parse SSE
 4. Uses `streamText()` to stream tokens back to client
 5. Client reads stream via `response.body.pipeThrough(new TextDecoderStream())`
+
+**`/api/research` endpoint:**
+1. Collects 18 business context fields from form
+2. Builds comprehensive prompt using `buildMasterPrompt()`
+3. Calls `c.env.AI.run('@cf/meta/llama-3.1-70b-instruct', { messages, stream: true, max_tokens: 8000 })`
+4. Streams ~6,000 word Market Intelligence Report back to client
+5. **Critical**: `max_tokens: 8000` to stay within 24K context window (input ~15K + output 8K = ~23K)
 
 ## Configuration Files
 
@@ -158,6 +182,38 @@ Accept that local dev cannot test real AI. Solutions:
 ### Dependencies
 - Uses CDN resources (markdown-it, highlight.js) - avoid bundling these
 - Minimal dependencies by design - think twice before adding new ones
+
+## Market Intelligence Generator
+
+**Route**: `/research`
+**Documentation**: See `RESEARCH-GENERATOR.md` for full details
+
+### Key Features
+
+- **3-Step Wizard Form**: Collects 18 business context fields across 3 progressive steps
+- **Fill Test Data Button**: Development tool (🧪 button in header) auto-fills form with realistic test data inspired by executive coaching business
+- **Streaming Reports**: Generates ~6,000 word (8,000 token) comprehensive market intelligence reports
+- **Client-side State**: Form data and reports saved to LocalStorage for persistence
+
+### Token Budget Constraints
+
+**CRITICAL**: Llama 3.1 70B has a **24,000 token context window**. The research prompt uses ~15,000 input tokens, leaving room for only **8,000 output tokens**.
+
+**DO NOT increase `max_tokens` above 8000** in `/api/research` endpoint or you'll get:
+```
+Error 5021: The estimated number of input and maximum output tokens (25136) exceeded this model context window limit (24000).
+```
+
+### Development Testing
+
+For rapid testing without filling the 18-field form manually:
+
+1. Navigate to `/research`
+2. Click **"🧪 Fill Test Data"** button (top-right corner)
+3. Form auto-populates and advances to Step 3
+4. Click "Generate Research Report"
+
+Test data features realistic executive coaching business context (Ashley Shaw Consulting - women in tech leadership).
 
 ## Testing with Playwright MCP
 

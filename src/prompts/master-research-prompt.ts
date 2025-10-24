@@ -28,7 +28,9 @@ export function buildMasterPrompt(context: BusinessContext): string {
     competitors_offers
   } = context;
 
-  const keywords = specialization_keywords.split(',').map(k => k.trim()).filter(k => k).join(', ');
+  const keywords = specialization_keywords
+    ? specialization_keywords.split(',').map(k => k.trim()).filter(k => k).join(', ')
+    : '';
 
   return `You are a world-class market research analyst and business strategist with expertise in ${preferred_market_category} markets. You specialize in creating comprehensive, actionable market research reports that lead directly to profitable offer design.
 

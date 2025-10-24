@@ -174,11 +174,18 @@ app.get("/research", (c) => {
 
 // Research API endpoint
 app.post("/api/research", async (c) => {
-  const businessContext: BusinessContext = await c.req.json();
+  try {
+    const businessContext: BusinessContext = await c.req.json();
 
-  // Build comprehensive prompt with all context
-  const systemMessage = "You are a professional market research analyst specializing in creating comprehensive business intelligence reports.";
-  const userMessage = buildMasterPrompt(businessContext);
+    // Log received data for debugging
+    console.log('📥 Received business context:', {
+      business_name: businessContext.business_name,
+      fieldCount: Object.keys(businessContext).length,
+    });
+
+    // Build comprehensive prompt with all context
+    const systemMessage = "You are a professional market research analyst specializing in creating comprehensive business intelligence reports.";
+    const userMessage = buildMasterPrompt(businessContext);
 
   const messages = [
     { role: "system", content: systemMessage },
@@ -210,14 +217,15 @@ app.post("/api/research", async (c) => {
   console.log('📏 Prompt Statistics', {
     promptLength: userMessage.length,
     estimatedInputTokens: Math.ceil(userMessage.length / 4),
-    maxOutputTokens: 10000,
-    expectedWords: '~7,500',
+    maxOutputTokens: 8000,
+    expectedWords: '~6,000',
   });
 
   console.log('⚙️ AI Configuration', {
     model: '@cf/meta/llama-3.1-70b-instruct',
-    maxTokens: 10000,
+    maxTokens: 8000,
     streaming: true,
+    contextLimit: 24000,
   });
 
   // Production code with real AI - use most capable model for best results
@@ -234,7 +242,7 @@ app.post("/api/research", async (c) => {
         {
           messages,
           stream: true,
-          max_tokens: 10000, // Allow up to 10,000 output tokens (~7,500 words)
+          max_tokens: 8000, // Reduced to fit within 24K context window (input ~15K + output 8K = 23K)
         }
       )) as ReadableStream;
       successfulInference = true;
@@ -277,7 +285,7 @@ app.post("/api/research", async (c) => {
             tokensGenerated: tokenCount,
             estimatedWords,
             elapsedSeconds: elapsed,
-            percentComplete: Math.round((tokenCount / 10000) * 100) + '%'
+            percentComplete: Math.round((tokenCount / 8000) * 100) + '%'
           });
           lastLogTime = Date.now();
         }
@@ -293,6 +301,17 @@ app.post("/api/research", async (c) => {
       avgTokensPerSecond: (tokenCount / totalTime).toFixed(2)
     });
   });
+  } catch (error) {
+    console.error('❌ Error in /api/research endpoint:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return c.json({
+      error: 'Failed to generate research report',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
 });
 
 export default app;
