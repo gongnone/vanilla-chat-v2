@@ -10,6 +10,11 @@ This is a template repository. Please feel free to create your own repository fr
 
 This is, like all of us, a Work in Progress.
 
+## Features
+
+- **Chat Interface** (`/`) - Interactive chat with multiple AI models
+- **Market Research Generator** (`/research`) - Comprehensive business research tool with 18-field context collection and AI-powered analysis. See [RESEARCH-GENERATOR.md](./RESEARCH-GENERATOR.md) for details.
+
 ## Installation
 
 ```bash

@@ -3,6 +3,9 @@ import { streamText } from "hono/streaming";
 import { renderer } from "./renderer";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { Ai } from "@cloudflare/workers-types";
+import { ResearchFormPage } from "./components/research-form";
+import { buildMasterPrompt } from "./prompts/master-research-prompt";
+import type { BusinessContext } from "./types";
 
 type Bindings = {
   AI: Ai;
@@ -150,6 +153,86 @@ app.post("/api/chat", async (c) => {
   }
 
   // EventSource stream is handy for local event sources, but we want to just stream text
+  const tokenStream = eventSourceStream
+    .pipeThrough(new TextDecoderStream())
+    .pipeThrough(new EventSourceParserStream());
+
+  return streamText(c, async (stream) => {
+    for await (const msg of tokenStream) {
+      if (msg.data !== "[DONE]") {
+        const data = JSON.parse(msg.data);
+        stream.write(data.response);
+      }
+    }
+  });
+});
+
+// Research form route
+app.get("/research", (c) => {
+  return c.render(<ResearchFormPage />);
+});
+
+// Research API endpoint
+app.post("/api/research", async (c) => {
+  const businessContext: BusinessContext = await c.req.json();
+
+  // Build comprehensive prompt with all context
+  const systemMessage = "You are a professional market research analyst specializing in creating comprehensive business intelligence reports.";
+  const userMessage = buildMasterPrompt(businessContext);
+
+  const messages = [
+    { role: "system", content: systemMessage },
+    { role: "user", content: userMessage }
+  ];
+
+  // Check if AI binding is available (it won't be in local dev)
+  if (!c.env?.AI) {
+    console.warn("⚠️  AI binding not available - using mock response for local development");
+    console.log("📝 To use real AI, deploy with: npm run deploy");
+
+    return streamText(c, async (stream) => {
+      const mockResponse = `**Local Development Mode**\n\n⚠️ Cloudflare Workers AI is not available in local development.\n\n**Business:** ${businessContext.business_name}\n**Niche:** ${businessContext.niche}\n**Target:** ${businessContext.target_market_hypothesis}\n\n**To generate a real research report:**\n1. Deploy: \`npm run preview:remote\`\n2. Visit your preview URL\n\nThis would normally generate an 8,000-12,000 word comprehensive market research report including:\n- Market validation & Power 4% analysis\n- Demographics & community ecosystem\n- Buyer language extraction\n- Emotional intelligence (pain points, desires, fears)\n- Dream buyer avatar\n- Copy hooks & headlines\n- Godfather offer design\n- Pricing strategy\n- And more...`;
+
+      for (const char of mockResponse) {
+        stream.write(char);
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    });
+  }
+
+  // Production code with real AI - use most capable model for best results
+  let eventSourceStream;
+  let retryCount = 0;
+  let successfulInference = false;
+  let lastError;
+  const MAX_RETRIES = 3;
+
+  while (successfulInference === false && retryCount < MAX_RETRIES) {
+    try {
+      eventSourceStream = (await c.env.AI.run(
+        "@cf/meta/llama-3.1-70b-instruct", // Use most capable model
+        {
+          messages,
+          stream: true,
+        }
+      )) as ReadableStream;
+      successfulInference = true;
+    } catch (err) {
+      lastError = err;
+      retryCount++;
+      console.error(err);
+      console.log(`Retrying #${retryCount}...`);
+    }
+  }
+
+  if (eventSourceStream === undefined) {
+    if (lastError) {
+      throw lastError;
+    }
+    throw new Error(`Problem with AI model`);
+  }
+
+  // Stream the AI response
   const tokenStream = eventSourceStream
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(new EventSourceParserStream());
