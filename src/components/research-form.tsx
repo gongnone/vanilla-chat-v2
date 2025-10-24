@@ -365,11 +365,12 @@ export const ResearchFormPage = () => (
         <div id="loading-state" className="hidden p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Generating Your Research Report...</h3>
-          <p className="text-gray-600">This will take 5-10 minutes. Please don't close this window.</p>
+          <p className="text-gray-600">This will take 10-15 minutes for a comprehensive ~7,500 word report. Please don't close this window.</p>
           <div className="mt-4 text-sm text-gray-500">
             <p>Analyzing market data...</p>
             <p>Extracting buyer language...</p>
             <p>Designing your offer...</p>
+            <p className="mt-2 text-xs italic">Generating up to 10,000 tokens (~7,500 words)</p>
           </div>
         </div>
 

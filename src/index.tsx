@@ -200,6 +200,26 @@ app.post("/api/research", async (c) => {
     });
   }
 
+  // Log request details for monitoring
+  console.log('🚀 Research Generation Started', {
+    timestamp: new Date().toISOString(),
+    business: businessContext.business_name,
+    niche: businessContext.niche,
+  });
+
+  console.log('📏 Prompt Statistics', {
+    promptLength: userMessage.length,
+    estimatedInputTokens: Math.ceil(userMessage.length / 4),
+    maxOutputTokens: 10000,
+    expectedWords: '~7,500',
+  });
+
+  console.log('⚙️ AI Configuration', {
+    model: '@cf/meta/llama-3.1-70b-instruct',
+    maxTokens: 10000,
+    streaming: true,
+  });
+
   // Production code with real AI - use most capable model for best results
   let eventSourceStream;
   let retryCount = 0;
@@ -214,6 +234,7 @@ app.post("/api/research", async (c) => {
         {
           messages,
           stream: true,
+          max_tokens: 10000, // Allow up to 10,000 output tokens (~7,500 words)
         }
       )) as ReadableStream;
       successfulInference = true;
@@ -238,12 +259,39 @@ app.post("/api/research", async (c) => {
     .pipeThrough(new EventSourceParserStream());
 
   return streamText(c, async (stream) => {
+    let tokenCount = 0;
+    let lastLogTime = Date.now();
+    const startTime = Date.now();
+
     for await (const msg of tokenStream) {
       if (msg.data !== "[DONE]") {
         const data = JSON.parse(msg.data);
         stream.write(data.response);
+        tokenCount++;
+
+        // Log progress every 1000 tokens or every 30 seconds
+        if (tokenCount % 1000 === 0 || Date.now() - lastLogTime > 30000) {
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          const estimatedWords = Math.round(tokenCount * 0.75);
+          console.log(`📊 Generation Progress`, {
+            tokensGenerated: tokenCount,
+            estimatedWords,
+            elapsedSeconds: elapsed,
+            percentComplete: Math.round((tokenCount / 10000) * 100) + '%'
+          });
+          lastLogTime = Date.now();
+        }
       }
     }
+
+    const totalTime = Math.round((Date.now() - startTime) / 1000);
+    const estimatedWords = Math.round(tokenCount * 0.75);
+    console.log('✅ Generation Complete', {
+      totalTokens: tokenCount,
+      estimatedWords,
+      totalTimeSeconds: totalTime,
+      avgTokensPerSecond: (tokenCount / totalTime).toFixed(2)
+    });
   });
 });
 

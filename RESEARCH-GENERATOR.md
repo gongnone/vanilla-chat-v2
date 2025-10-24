@@ -5,7 +5,7 @@ Comprehensive market research and offer design tool powered by Cloudflare Worker
 ## Features
 
 - **18-Field Context Collection** - 3-step wizard form captures complete business context
-- **AI-Powered Analysis** - Generates 8,000-12,000 word market research reports
+- **AI-Powered Analysis** - Generates ~7,500 word (10,000 token) comprehensive market research reports
 - **Comprehensive Coverage** - 7 research phases from market validation to offer design
 - **Streaming Results** - Real-time report generation with live markdown rendering
 - **Quality Validation** - Client-side checks ensure detailed inputs for better outputs
@@ -44,7 +44,7 @@ Visit `/research` on your deployed site (or locally at `http://localhost:8788/re
 - Unique mechanism
 - Competitors' offers (optional)
 
-### 3. Generate Report (5-10 minutes)
+### 3. Generate Report (10-15 minutes)
 
 Click "Generate Research Report" and watch as the AI creates:
 
@@ -119,7 +119,12 @@ public/static/
 
 Request body: `BusinessContext` object with all 18 fields
 
-Response: Streaming markdown report (8,000-12,000 words)
+Response: Streaming markdown report (10,000 tokens = ~7,500 words)
+
+AI Configuration:
+- Model: `@cf/meta/llama-3.1-70b-instruct`
+- max_tokens: 10,000
+- Context window: 128,000 tokens
 
 ### Local Development
 
@@ -152,9 +157,14 @@ Visit: `https://vanilla-chat-demo-tmpl-al4.pages.dev/research`
 
 ## Cost Estimates
 
-- **Per Report:** ~$0.18 (Workers AI usage)
-- **Monthly (100 reports):** ~$18
+- **Per Report:** ~$0.16 (10,000 output tokens + 6,000 input tokens)
+- **Monthly (100 reports):** ~$16
 - **No additional services required** (uses existing Workers AI binding)
+
+**Token Breakdown:**
+- Input: ~6,000 tokens (prompt) = $0.06
+- Output: 10,000 tokens (report) = $0.10
+- Total: ~$0.16 per comprehensive report
 
 ## Tips for Best Results
 
@@ -201,14 +211,16 @@ Reports are structured markdown with:
 - Ensure minimum lengths for detailed fields
 
 **"Generation taking too long"**
-- Reports can take 5-10 minutes (10K+ tokens)
+- Reports can take 10-15 minutes (10,000 tokens = ~7,500 words)
 - Don't close the browser window
 - Check browser console for errors
+- Use `wrangler pages deployment tail` to see real-time progress logs
 
-**"Report cut off"**
-- May hit AI model context window limits
-- Try reducing description lengths slightly
-- Most reports complete successfully
+**"Report cut off or too short"**
+- Default was 256 tokens (now fixed to 10,000)
+- Check logs to confirm max_tokens setting
+- Actual output may vary based on AI's assessment of prompt
+- Most reports generate 7,000-9,000 tokens
 
 ## Future Enhancements
 
