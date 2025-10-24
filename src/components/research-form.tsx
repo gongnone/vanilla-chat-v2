@@ -3,10 +3,18 @@ export const ResearchFormPage = () => (
     <div className="max-w-3xl mx-auto">
       <div className="bg-white shadow-xl rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
-          <h1 className="text-3xl font-bold text-white">Market Research Generator</h1>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 relative">
+          <button
+            type="button"
+            onclick="fillTestData()"
+            className="absolute top-4 right-4 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors"
+            title="Auto-fill form with test data for quick testing"
+          >
+            🧪 Fill Test Data
+          </button>
+          <h1 className="text-3xl font-bold text-white">Market Intelligence Generator</h1>
           <p className="mt-2 text-blue-100">
-            Get a comprehensive market research report and offer design in 10 minutes
+            Get a professional Market Intelligence Report with offer design in 10-15 minutes
           </p>
         </div>
 
@@ -377,8 +385,8 @@ export const ResearchFormPage = () => (
         {/* Results Container */}
         <div id="research-output" className="hidden">
           <div className="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
-            <h2 className="text-3xl font-bold text-white">Your Market Research Report</h2>
-            <p className="mt-2 text-green-100">Comprehensive analysis and offer design complete!</p>
+            <h2 className="text-3xl font-bold text-white">Your Market Intelligence Report</h2>
+            <p className="mt-2 text-green-100">Professional market analysis and strategic recommendations complete!</p>
           </div>
 
           <div className="p-8">
