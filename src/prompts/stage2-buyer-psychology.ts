@@ -114,69 +114,58 @@ Based on ${target_demographics} and Power 4% analysis:
 
 # OUTPUT FORMAT
 
-Return ONLY a valid JSON object with this exact structure:
+Return ONLY a valid JSON object with this SIMPLIFIED flat structure (no nested arrays of objects):
 
 \`\`\`json
 {
-  "buyer_language": [
-    {
-      "exact_phrase": "I feel like I'm spinning my wheels",
-      "meaning_context": "They're working hard but seeing no progress toward their goal",
-      "emotional_tone": "frustration",
-      "usage_frequency": "high",
-      "marketing_application": "Use in headlines to create instant recognition: 'Stop Spinning Your Wheels and Start Seeing Real Progress'"
-    }
-    // ... 6 more phrases (7 total)
+  "buyer_phrases": [
+    "I feel like I'm spinning my wheels",
+    "There's never enough time in the day",
+    "I'm drowning in information but starving for clarity",
+    "Every solution I try just adds more complexity",
+    "I feel guilty about neglecting important areas"
   ],
-  "top_fears": [
-    {
-      "name": "Wasting Money Fear",
-      "intensity": 9,
-      "quote": "I've spent thousands on programs that didn't work, I can't afford another mistake",
-      "root_emotion": "shame",
-      "purchase_blocker": "What if this is just another program I don't finish?",
-      "how_offer_addresses": "Money-back guarantee + accountability system ensures completion",
-      "is_surface_fear": false
-    }
-    // ... 2 more fears (3 total)
+  "phrase_emotions": ["frustration", "overwhelm", "confusion", "anxiety", "guilt"],
+  "phrase_marketing_hooks": [
+    "Stop Spinning Your Wheels - Start Seeing Real Progress",
+    "Finally Find Time for What Matters Most",
+    "Cut Through Information Overload - Get Crystal Clarity",
+    "The Simple System That Actually Works",
+    "End the Guilt - Master Your Priorities"
   ],
-  "top_desires": [
-    {
-      "name": "Freedom Desire",
-      "intensity": 10,
-      "aspirational_quote": "I just want to wake up without that knot in my stomach",
-      "deeper_meaning": "freedom",
-      "timeline_expectation": "See progress within 30 days, full transformation in 3-6 months",
-      "willingness_to_pay": "$5,000-$15,000 for guaranteed solution",
-      "how_business_delivers": "Systematic framework creates predictable progress and eliminates guesswork"
-    }
-    // ... 2 more desires (3 total)
-  ],
-  "top_pain_points": [
-    {
-      "frustration": "Spending hours researching solutions but getting more confused",
-      "quote": "Every expert says something different, I don't know who to trust anymore",
-      "root_emotion": "overwhelm",
-      "what_theyve_tried": "Free YouTube videos, $500 online course, 1-hour coaching session",
-      "why_it_didnt_work": "Too generic, no personalized support, conflicting information",
-      "how_unique_mechanism_solves": "Personalized roadmap eliminates decision fatigue and provides clear next steps"
-    }
-    // ... 2 more pain points (3 total)
-  ],
-  "barriers": [
-    {
-      "barrier": "Self-doubt about ability to succeed",
-      "type": "internal",
-      "objection_handling_script": "I understand you've tried before and it didn't work. That's not a reflection of you - it's a reflection of the program. Our system is designed for people who've struggled before, with accountability and support built in."
-    },
-    {
-      "barrier": "Time constraints",
-      "type": "external",
-      "objection_handling_script": "This is designed for busy professionals. The framework requires just 2-3 focused hours per week, and we help you identify what to eliminate to create that space."
-    }
-    // ... 3 more barriers (5 total)
-  ],
-  "price_justification": "Power 4% segment has household income of $200K-500K+ with $20K-50K annual discretionary spending. Currently wasting $5K-15K/year on partial solutions, ineffective programs, and opportunity cost. Solving [pain point] would generate $50K-200K+ value annually through [specific outcomes]. Premium pricing of $10K-25K represents 10-40% ROI within 12 months."
+
+  "fear_1": "Wasting money on another solution that doesn't work",
+  "fear_1_intensity": 9,
+  "fear_1_root_emotion": "shame and regret from past failures",
+  "fear_2": "Looking incompetent or failing in front of team/family",
+  "fear_2_intensity": 8,
+  "fear_2_root_emotion": "fear of judgment and loss of respect",
+  "fear_3": "Missing critical opportunities while stuck in current situation",
+  "fear_3_intensity": 8,
+  "fear_3_root_emotion": "anxiety about falling behind peers",
+
+  "desire_1": "Freedom from constant overwhelm and stress",
+  "desire_1_intensity": 10,
+  "desire_1_deeper_meaning": "True freedom to focus on what matters without guilt",
+  "desire_2": "Respect and recognition from peers and team",
+  "desire_2_intensity": 9,
+  "desire_2_deeper_meaning": "Validation of their worth and capabilities",
+  "desire_3": "Making meaningful impact in their field",
+  "desire_3_intensity": 8,
+  "desire_3_deeper_meaning": "Legacy and significance beyond just success",
+
+  "pain_point_1": "Spending hours researching solutions but getting more confused by conflicting advice",
+  "pain_point_1_quote": "Every expert says something different - I don't know who to trust anymore",
+  "pain_point_2": "Constant guilt about neglecting important areas while firefighting urgent issues",
+  "pain_point_2_quote": "I know I should be working on strategy, but I'm always putting out fires",
+  "pain_point_3": "Feeling like a fraud despite external success",
+  "pain_point_3_quote": "From the outside I look successful, but inside I feel like I'm barely holding it together",
+
+  "internal_barriers": "Self-doubt about ability to change; Fear of failure; Imposter syndrome; Perfectionism paralysis",
+  "external_barriers": "Time constraints; Budget concerns; Lack of support system; Too many competing priorities",
+  "objection_handling_summary": "Address fear of wasting money with guarantee + proven system. Handle time concerns with 2-3 hour weekly commitment. Combat self-doubt with accountability and proven framework for people who've struggled before.",
+
+  "price_justification": "Power 4% segment ($500K-$1M income) currently wastes $10K-20K annually on ineffective solutions, consultants, and opportunity cost. Solving [time management] generates $100K-300K value annually through increased productivity, better decisions, and reclaimed strategic time. Premium pricing of $15K represents 7-20x ROI within 12 months."
 }
 \`\`\`
 
