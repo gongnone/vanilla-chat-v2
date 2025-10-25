@@ -39,9 +39,9 @@ export function buildStage2BuyerPsychologyPrompt(
 
 Research buyer psychology and return a structured JSON object with ACTUAL buyer language and emotional data.
 
-## 1. Buyer Language Extraction (10-15 phrases)
+## 1. Buyer Language Extraction (7 phrases)
 
-Find 10-15 EXACT phrases that ${target_market_hypothesis} use when discussing ${biggest_customer_pain_point} in online communities, forums, social media, and reviews.
+Find 7 EXACT phrases that ${target_market_hypothesis} use when discussing ${biggest_customer_pain_point} in online communities, forums, social media, and reviews.
 
 For EACH phrase provide:
 - **exact_phrase**: Word-for-word quote (e.g., "I feel like I'm drowning in information")
@@ -52,9 +52,9 @@ For EACH phrase provide:
 
 **Research Sources**: Reddit, Facebook groups, Quora, Amazon reviews, forum discussions related to ${niche}
 
-## 2. Top Fears Analysis (3-5 fears)
+## 2. Top Fears Analysis (3 fears)
 
-Identify 3-5 MAJOR fears that prevent ${target_market_hypothesis} from achieving their goals or buying solutions like ${current_offer_description}.
+Identify 3 MAJOR fears that prevent ${target_market_hypothesis} from achieving their goals or buying solutions like ${current_offer_description}.
 
 For EACH fear provide:
 - **name**: Short name for the fear (e.g., "Wasting Money Fear")
@@ -66,9 +66,9 @@ For EACH fear provide:
 
 **Distinguish**: Surface fears vs deep fears (e.g., "afraid of wasting money" is surface, "afraid of looking stupid to spouse" is deep)
 
-## 3. Top Desires Analysis (3-5 desires)
+## 3. Top Desires Analysis (3 desires)
 
-Identify 3-5 MAJOR desires that ${target_market_hypothesis} are trying to achieve (beyond the obvious surface desire).
+Identify 3 MAJOR desires that ${target_market_hypothesis} are trying to achieve (beyond the obvious surface desire).
 
 For EACH desire provide:
 - **name**: Short name (e.g., "Freedom Desire")
@@ -81,9 +81,9 @@ For EACH desire provide:
 
 **Go Deeper**: Don't just list "make more money" - go to "what would more money give them?" (freedom, respect, security, impact, etc.)
 
-## 4. Major Pain Points (5 pain points)
+## 4. Major Pain Points (3 pain points)
 
-Detail the 5 MAJOR daily frustrations related to ${biggest_customer_pain_point}.
+Detail the 3 MAJOR daily frustrations related to ${biggest_customer_pain_point}.
 
 For EACH pain point provide:
 - **frustration**: Specific daily frustration they experience
@@ -93,17 +93,17 @@ For EACH pain point provide:
 - **why_it_didnt_work**: Why previous solutions failed
 - **how_unique_mechanism_solves**: How ${unique_mechanism} addresses the root cause
 
-## 5. Barriers Analysis (Internal + External)
+## 5. Barriers Analysis (5 total barriers)
 
-List all barriers preventing them from taking action, split into:
+List 5 barriers preventing them from taking action, split into:
 
 **Internal Barriers** (psychological):
 - Self-doubt, fear of failure, imposter syndrome, etc.
-- For each: name + objection_handling_script
+- Provide 2-3 internal barriers with: name + objection_handling_script
 
 **External Barriers** (practical):
 - Time, money, resources, support, knowledge, etc.
-- For each: name + objection_handling_script
+- Provide 2-3 external barriers with: name + objection_handling_script
 
 ## 6. Price Justification
 
@@ -126,7 +126,7 @@ Return ONLY a valid JSON object with this exact structure:
       "usage_frequency": "high",
       "marketing_application": "Use in headlines to create instant recognition: 'Stop Spinning Your Wheels and Start Seeing Real Progress'"
     }
-    // ... 9-14 more phrases
+    // ... 6 more phrases (7 total)
   ],
   "top_fears": [
     {
@@ -138,7 +138,7 @@ Return ONLY a valid JSON object with this exact structure:
       "how_offer_addresses": "Money-back guarantee + accountability system ensures completion",
       "is_surface_fear": false
     }
-    // ... 2-4 more fears
+    // ... 2 more fears (3 total)
   ],
   "top_desires": [
     {
@@ -150,7 +150,7 @@ Return ONLY a valid JSON object with this exact structure:
       "willingness_to_pay": "$5,000-$15,000 for guaranteed solution",
       "how_business_delivers": "Systematic framework creates predictable progress and eliminates guesswork"
     }
-    // ... 2-4 more desires
+    // ... 2 more desires (3 total)
   ],
   "top_pain_points": [
     {
@@ -161,7 +161,7 @@ Return ONLY a valid JSON object with this exact structure:
       "why_it_didnt_work": "Too generic, no personalized support, conflicting information",
       "how_unique_mechanism_solves": "Personalized roadmap eliminates decision fatigue and provides clear next steps"
     }
-    // ... 4 more pain points
+    // ... 2 more pain points (3 total)
   ],
   "barriers": [
     {
@@ -174,7 +174,7 @@ Return ONLY a valid JSON object with this exact structure:
       "type": "external",
       "objection_handling_script": "This is designed for busy professionals. The framework requires just 2-3 focused hours per week, and we help you identify what to eliminate to create that space."
     }
-    // ... 5-8 more barriers total
+    // ... 3 more barriers (5 total)
   ],
   "price_justification": "Power 4% segment has household income of $200K-500K+ with $20K-50K annual discretionary spending. Currently wasting $5K-15K/year on partial solutions, ineffective programs, and opportunity cost. Solving [pain point] would generate $50K-200K+ value annually through [specific outcomes]. Premium pricing of $10K-25K represents 10-40% ROI within 12 months."
 }

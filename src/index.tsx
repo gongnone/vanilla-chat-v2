@@ -335,9 +335,9 @@ app.post("/api/research", async (c) => {
 // Multi-Stage Research - Individual Stage Endpoints
 // Each stage is a separate endpoint to avoid 60s Pages Function timeout
 
-// Model configuration
-const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 1-3
-const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5
+// Model configuration - Using FP8 Fast variant for better performance
+const RESEARCH_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; // Stages 1-3 (faster inference)
+const CREATIVE_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; // Stages 4-5 (faster inference)
 
 // Helper function to call AI and parse JSON response
 async function callAIStage<T>(
@@ -489,7 +489,7 @@ app.post("/api/research/stage/2", async (c) => {
       "Buyer Psychology",
       2,
       prompt,
-      3000,
+      2500, // Reduced from 3000 to match Stage 1's successful allocation
       RESEARCH_MODEL
     );
 
@@ -624,8 +624,8 @@ app.post("/api/research/synthesize", async (c) => {
       { role: "user", content: stage6Prompt }
     ];
 
-    // Use creative model for final synthesis (long-form writing)
-    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+    // Use creative model for final synthesis (long-form writing) - FP8 Fast for speed
+    const SYNTHESIS_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
     console.log('📏 Stage 6 Prompt Statistics', {
       model: SYNTHESIS_MODEL,
