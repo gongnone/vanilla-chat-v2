@@ -353,10 +353,13 @@ async function callAIStage<T>(
     throw new Error('AI binding not available');
   }
 
+  const estimatedInputTokens = Math.ceil(prompt.length / 4);
   console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
     model: modelName,
     maxTokens,
-    estimatedInputTokens: Math.ceil(prompt.length / 4),
+    estimatedInputTokens,
+    promptLength: prompt.length,
+    totalEstimatedTokens: estimatedInputTokens + maxTokens,
   });
 
   const startTime = Date.now();
@@ -369,11 +372,14 @@ async function callAIStage<T>(
   const MAX_RETRIES = 3;
   let lastError: any;
 
+  // Dynamic timeout based on token allocation
+  const TIMEOUT_MS = maxTokens > 2500 ? 60000 : 45000;
+
   while (retryCount < MAX_RETRIES) {
     try {
-      console.log(`⏱️  Stage ${stageNumber}: Calling AI with model ${modelName}...`);
+      console.log(`⏱️  Stage ${stageNumber}: Calling AI (timeout: ${TIMEOUT_MS/1000}s)...`);
 
-      // Add timeout wrapper (Workers AI calls should complete in <30s)
+      // Add timeout wrapper (adjust based on expected output size)
       const aiCallPromise = c.env.AI.run(
         modelName,
         {
@@ -384,7 +390,7 @@ async function callAIStage<T>(
       );
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('AI call timeout after 45s')), 45000)
+        setTimeout(() => reject(new Error(`AI call timeout after ${TIMEOUT_MS/1000}s`)), TIMEOUT_MS)
       );
 
       const response = await Promise.race([aiCallPromise, timeoutPromise]) as any;
@@ -418,16 +424,30 @@ async function callAIStage<T>(
     } catch (err) {
       lastError = err;
       retryCount++;
-      console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, err);
+
+      const errorDetails = {
+        stage: stageNumber,
+        stageName,
+        attempt: retryCount,
+        errorType: err instanceof Error ? err.constructor.name : typeof err,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        promptLength: prompt.length,
+        estimatedTokens: estimatedInputTokens,
+        elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
+      };
+
+      console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, errorDetails);
 
       if (retryCount < MAX_RETRIES) {
-        console.log(`🔄 Retrying stage ${stageNumber}...`);
-        await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+        const delayMs = 2000 * retryCount;
+        console.log(`🔄 Retrying stage ${stageNumber} in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
   }
 
-  throw new Error(`Stage ${stageNumber} (${stageName}) failed after ${MAX_RETRIES} attempts: ${lastError}`);
+  const finalError = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`Stage ${stageNumber} (${stageName}) failed after ${MAX_RETRIES} attempts: ${finalError}`);
 }
 
 // Stage 1: Market Analysis (No dependencies)
