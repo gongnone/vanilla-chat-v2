@@ -335,9 +335,9 @@ app.post("/api/research", async (c) => {
 // Multi-Stage Research - Individual Stage Endpoints
 // Each stage is a separate endpoint to avoid 60s Pages Function timeout
 
-// Model configuration - Highest quality models for research and creative stages
-const RESEARCH_MODEL = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"; // Stages 1-3 (best reasoning/analysis)
-const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5 (best creative writing)
+// Model configuration - Llama 3.1 70B balances quality and speed for 60s timeout
+const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 1-3 (good reasoning, fast enough)
+const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5 (excellent creative writing)
 
 // Helper function to call AI and parse JSON response
 async function callAIStage<T>(
