@@ -379,13 +379,24 @@ app.post("/api/research/multi-stage", async (c) => {
 
       while (retryCount < MAX_RETRIES) {
         try {
-          const response = await c.env.AI.run(
+          console.log(`⏱️  Stage ${stageNumber}: Calling AI with model ${modelName}...`);
+
+          // Add timeout wrapper (Workers AI calls should complete in <30s)
+          const aiCallPromise = c.env.AI.run(
             modelName,
             {
               messages,
               max_tokens: maxTokens,
+              stream: false, // CRITICAL: Must be false for JSON responses
             }
-          ) as any;
+          );
+
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('AI call timeout after 45s')), 45000)
+          );
+
+          const response = await Promise.race([aiCallPromise, timeoutPromise]) as any;
+          console.log(`✓ Stage ${stageNumber}: AI response received`);
 
           // Extract the response text
           const responseText = response.response || JSON.stringify(response);
@@ -430,10 +441,10 @@ app.post("/api/research/multi-stage", async (c) => {
     // Execute all 6 stages sequentially
     const overallStart = Date.now();
 
-    // Model specialization: Use Llama 8B for research (faster, cheaper), Llama 70B for creative/writing
-    // Note: DeepSeek R1 32B may have availability issues, using proven Llama models
-    const RESEARCH_MODEL = "@cf/meta/llama-3.1-8b-instruct-awq"; // Fast, quantized for research tasks
-    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Best for creative writing
+    // Model specialization: Using same proven Llama 70B for all stages to ensure reliability
+    // TODO: Can experiment with smaller models once we confirm multi-stage works end-to-end
+    const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Proven, reliable
+    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Proven, reliable
 
     // Stage 1: Market Analysis (Research specialist)
     const stage1Prompt = buildStage1MarketAnalysisPrompt(businessContext);
