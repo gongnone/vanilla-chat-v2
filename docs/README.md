@@ -2,7 +2,7 @@
 
 This directory contains technical documentation for the vanilla-chat-v2 project.
 
-## Active Documentation
+## Documentation
 
 ### [STAGE6-BUGFIX-CHANGELOG.md](STAGE6-BUGFIX-CHANGELOG.md)
 **Status**: Production
@@ -21,22 +21,6 @@ Complete changelog for Stage 6 Report Synthesis bug fixes. Documents two critica
 - Deployment Checklist
 
 **Audience**: Developers, DevOps, Technical Stakeholders
-
----
-
-## Archive
-
-The `archive/` directory contains historical debug documentation from the investigation and fix process. These files are preserved for historical reference but are superseded by the consolidated changelog above.
-
-### Archive Contents
-
-- **CRITICAL-BUGS-FOUND.md** - Initial bug discovery (11 property mapping errors)
-- **DEBUG-SESSION-SUMMARY.md** - Debugging session notes
-- **RUNTIME-ERROR-FIX.md** - Runtime error investigation
-- **STAGE6-FIX-SUMMARY.md** - Intermediate fix summary
-- **STAGE6-COMPLETE-FIX.md** - Complete fix documentation (draft)
-
-**Note**: For current production documentation, always refer to `STAGE6-BUGFIX-CHANGELOG.md`.
 
 ---
 
@@ -106,10 +90,6 @@ The `archive/` directory contains historical debug documentation from the invest
 - Deployment Instructions
 - Related Documentation Links
 
-**Archive Documentation**:
-- Preserve as-is for historical reference
-- Add note pointing to current production docs
-
 ---
 
 ## Contributing
@@ -117,9 +97,8 @@ The `archive/` directory contains historical debug documentation from the invest
 When adding new documentation:
 
 1. **For bug fixes/features**: Create production-ready changelog in `docs/`
-2. **For debugging notes**: Create in project root, move to `docs/archive/` after resolution
-3. **Update this README**: Add new files to appropriate section
-4. **Cross-reference**: Link related docs bidirectionally
+2. **Update this README**: Add new files to appropriate section
+3. **Cross-reference**: Link related docs bidirectionally
 
 ---
 
