@@ -430,9 +430,10 @@ app.post("/api/research/multi-stage", async (c) => {
     // Execute all 6 stages sequentially
     const overallStart = Date.now();
 
-    // Model specialization: DeepSeek R1 for research/analysis, Llama 70B for creative/writing
-    const RESEARCH_MODEL = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b";
-    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+    // Model specialization: Use Llama 8B for research (faster, cheaper), Llama 70B for creative/writing
+    // Note: DeepSeek R1 32B may have availability issues, using proven Llama models
+    const RESEARCH_MODEL = "@cf/meta/llama-3.1-8b-instruct-awq"; // Fast, quantized for research tasks
+    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Best for creative writing
 
     // Stage 1: Market Analysis (Research specialist)
     const stage1Prompt = buildStage1MarketAnalysisPrompt(businessContext);
