@@ -335,9 +335,9 @@ app.post("/api/research", async (c) => {
 // Multi-Stage Research - Individual Stage Endpoints
 // Each stage is a separate endpoint to avoid 60s Pages Function timeout
 
-// Model configuration - Using FP8 Fast variant for better performance
-const RESEARCH_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; // Stages 1-3 (faster inference)
-const CREATIVE_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; // Stages 4-5 (faster inference)
+// Model configuration - Highest quality models for research and creative stages
+const RESEARCH_MODEL = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"; // Stages 1-3 (best reasoning/analysis)
+const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5 (best creative writing)
 
 // Helper function to call AI and parse JSON response
 async function callAIStage<T>(
@@ -624,14 +624,18 @@ app.post("/api/research/synthesize", async (c) => {
       { role: "user", content: stage6Prompt }
     ];
 
-    // Use creative model for final synthesis (long-form writing) - FP8 Fast for speed
-    const SYNTHESIS_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+    // Use creative model for final synthesis (long-form writing) - Full precision for quality
+    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+
+    const estimatedInputTokens = Math.ceil(stage6Prompt.length / 4);
+    const maxOutputTokens = Math.min(5000, 24000 - estimatedInputTokens - 500); // Leave 500 token buffer
 
     console.log('📏 Stage 6 Prompt Statistics', {
       model: SYNTHESIS_MODEL,
       promptLength: stage6Prompt.length,
-      estimatedInputTokens: Math.ceil(stage6Prompt.length / 4),
-      maxOutputTokens: 6000,
+      estimatedInputTokens,
+      maxOutputTokens,
+      totalEstimated: estimatedInputTokens + maxOutputTokens,
     });
 
     // Stream the final report
@@ -648,7 +652,7 @@ app.post("/api/research/synthesize", async (c) => {
           {
             messages,
             stream: true,
-            max_tokens: 6000, // Comprehensive report
+            max_tokens: maxOutputTokens, // Dynamically calculated to avoid exceeding context window
           }
         )) as ReadableStream;
         successfulInference = true;
