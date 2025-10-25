@@ -13,7 +13,7 @@ import { buildStage2BuyerPsychologyPrompt } from "./prompts/stage2-buyer-psychol
 import { buildStage3CompetitiveAnalysisPrompt } from "./prompts/stage3-competitive-analysis";
 import { buildStage4AvatarCreationPrompt } from "./prompts/stage4-avatar-creation";
 import { buildStage5OfferDesignPrompt } from "./prompts/stage5-offer-design";
-import { buildStage6ReportSynthesisPrompt } from "./prompts/stage6-report-synthesis";
+import { buildStage6ReportSynthesisPromptCondensed } from "./prompts/stage6-report-synthesis-condensed";
 
 // Import multi-stage types
 import type {
@@ -617,26 +617,46 @@ app.post("/api/research/synthesize", async (c) => {
       });
     }
 
-    // Build Stage 6 prompt
-    const stage6Prompt = buildStage6ReportSynthesisPrompt(context, researchData);
+    // Build Stage 6 prompt (condensed version to avoid context window overflow)
+    let stage6Prompt: string;
+    try {
+      stage6Prompt = buildStage6ReportSynthesisPromptCondensed(context, researchData);
+      console.log('✅ Stage 6 prompt built successfully', {
+        promptLength: stage6Prompt.length,
+      });
+    } catch (promptError) {
+      console.error('❌ Failed to build Stage 6 prompt:', promptError);
+      console.error('Research data keys:', Object.keys(researchData));
+      console.error('Stage1 keys:', Object.keys(researchData.stage1_market_analysis || {}));
+      console.error('Stage2 keys:', Object.keys(researchData.stage2_buyer_psychology || {}));
+      console.error('Stage3 keys:', Object.keys(researchData.stage3_competitive_analysis || {}));
+      console.error('Stage4 keys:', Object.keys(researchData.stage4_avatar_creation || {}));
+      console.error('Stage5 keys:', Object.keys(researchData.stage5_offer_design || {}));
+      throw promptError;
+    }
 
     const messages = [
-      { role: "system", content: "You are a professional market intelligence report writer. Create a comprehensive markdown report using ALL the provided research data." },
+      { role: "system", content: "You are a professional market intelligence report writer. Create a comprehensive 5,000-6,000 word markdown report using ALL the provided research data. Be thorough and detailed." },
       { role: "user", content: stage6Prompt }
     ];
 
-    // Use creative model for final synthesis (long-form writing) - Full precision for quality
-    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+    // Use creative model for final synthesis (long-form writing) - Try 3.3 for stability
+    const SYNTHESIS_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-    const estimatedInputTokens = Math.ceil(stage6Prompt.length / 4);
-    const maxOutputTokens = Math.min(5000, 24000 - estimatedInputTokens - 500); // Leave 500 token buffer
+    // More accurate token estimation: ~1 token per 3.5 characters for condensed prompts
+    const estimatedInputTokens = Math.ceil(stage6Prompt.length / 3.5);
+    // Target 6,000 words = ~8,000 tokens, with safety buffer
+    const maxOutputTokens = Math.max(8000, Math.min(12000, 24000 - estimatedInputTokens - 500));
 
-    console.log('📏 Stage 6 Prompt Statistics', {
+    console.log('📏 Stage 6 Prompt Statistics (Condensed)', {
       model: SYNTHESIS_MODEL,
       promptLength: stage6Prompt.length,
       estimatedInputTokens,
       maxOutputTokens,
       totalEstimated: estimatedInputTokens + maxOutputTokens,
+      contextWindowLimit: 24000,
+      bufferTokens: 500,
+      expectedReportWords: '5,000-6,000',
     });
 
     // Stream the final report
