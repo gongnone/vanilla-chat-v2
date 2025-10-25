@@ -7,6 +7,24 @@ import { ResearchFormPage } from "./components/research-form";
 import { buildMasterPrompt } from "./prompts/master-research-prompt";
 import type { BusinessContext } from "./types";
 
+// Import multi-stage prompt builders
+import { buildStage1MarketAnalysisPrompt } from "./prompts/stage1-market-analysis";
+import { buildStage2BuyerPsychologyPrompt } from "./prompts/stage2-buyer-psychology";
+import { buildStage3CompetitiveAnalysisPrompt } from "./prompts/stage3-competitive-analysis";
+import { buildStage4AvatarCreationPrompt } from "./prompts/stage4-avatar-creation";
+import { buildStage5OfferDesignPrompt } from "./prompts/stage5-offer-design";
+import { buildStage6ReportSynthesisPrompt } from "./prompts/stage6-report-synthesis";
+
+// Import multi-stage types
+import type {
+  Stage1MarketAnalysis,
+  Stage2BuyerPsychology,
+  Stage3CompetitiveAnalysis,
+  Stage4AvatarCreation,
+  Stage5OfferDesign,
+  CompleteResearchData,
+} from "./types/research-stages";
+
 type Bindings = {
   AI: Ai;
 };
@@ -309,6 +327,275 @@ app.post("/api/research", async (c) => {
     });
     return c.json({
       error: 'Failed to generate research report',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
+});
+
+// Multi-Stage Research Orchestration Endpoint
+app.post("/api/research/multi-stage", async (c) => {
+  try {
+    const businessContext: BusinessContext = await c.req.json();
+
+    console.log('🚀 Multi-Stage Research Generation Started', {
+      timestamp: new Date().toISOString(),
+      business: businessContext.business_name,
+      niche: businessContext.niche,
+      stages: 6,
+    });
+
+    // Check if AI binding is available
+    if (!c.env?.AI) {
+      console.warn("⚠️  AI binding not available - multi-stage requires real AI deployment");
+      return c.json({
+        error: 'Multi-stage research requires AI deployment',
+        message: 'Deploy with: npm run preview:remote',
+      }, 503);
+    }
+
+    // Helper function to call AI and parse JSON response
+    async function callAIStage<T>(
+      stageName: string,
+      stageNumber: number,
+      prompt: string,
+      maxTokens: number = 2500
+    ): Promise<T> {
+      console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
+        maxTokens,
+        estimatedInputTokens: Math.ceil(prompt.length / 4),
+      });
+
+      const startTime = Date.now();
+      const messages = [
+        { role: "system", content: "You are a professional market research analyst. Return ONLY valid JSON as specified in the prompt." },
+        { role: "user", content: prompt }
+      ];
+
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
+      let lastError: any;
+
+      while (retryCount < MAX_RETRIES) {
+        try {
+          const response = await c.env.AI.run(
+            "@cf/meta/llama-3.1-70b-instruct",
+            {
+              messages,
+              max_tokens: maxTokens,
+            }
+          ) as any;
+
+          // Extract the response text
+          const responseText = response.response || JSON.stringify(response);
+
+          console.log(`✅ Stage ${stageNumber}: ${stageName} - Raw response received`, {
+            responseLength: responseText.length,
+            elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
+          });
+
+          // Try to parse JSON - handle markdown code blocks if present
+          let jsonText = responseText.trim();
+
+          // Remove markdown code blocks if present
+          if (jsonText.startsWith('```json')) {
+            jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          } else if (jsonText.startsWith('```')) {
+            jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          }
+
+          const parsedData = JSON.parse(jsonText) as T;
+
+          console.log(`✅ Stage ${stageNumber}: ${stageName} - Complete`, {
+            totalTimeSeconds: Math.round((Date.now() - startTime) / 1000),
+          });
+
+          return parsedData;
+        } catch (err) {
+          lastError = err;
+          retryCount++;
+          console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, err);
+
+          if (retryCount < MAX_RETRIES) {
+            console.log(`🔄 Retrying stage ${stageNumber}...`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+          }
+        }
+      }
+
+      throw new Error(`Stage ${stageNumber} (${stageName}) failed after ${MAX_RETRIES} attempts: ${lastError}`);
+    }
+
+    // Execute all 6 stages sequentially
+    const overallStart = Date.now();
+
+    // Stage 1: Market Analysis
+    const stage1Prompt = buildStage1MarketAnalysisPrompt(businessContext);
+    const stage1: Stage1MarketAnalysis = await callAIStage(
+      "Market Analysis",
+      1,
+      stage1Prompt,
+      2500
+    );
+
+    // Stage 2: Buyer Psychology
+    const stage2Prompt = buildStage2BuyerPsychologyPrompt(businessContext, stage1);
+    const stage2: Stage2BuyerPsychology = await callAIStage(
+      "Buyer Psychology",
+      2,
+      stage2Prompt,
+      3000
+    );
+
+    // Stage 3: Competitive Analysis
+    const stage3Prompt = buildStage3CompetitiveAnalysisPrompt(businessContext, stage1, stage2);
+    const stage3: Stage3CompetitiveAnalysis = await callAIStage(
+      "Competitive Analysis",
+      3,
+      stage3Prompt,
+      2000
+    );
+
+    // Stage 4: Avatar Creation
+    const stage4Prompt = buildStage4AvatarCreationPrompt(businessContext, stage1, stage2, stage3);
+    const stage4: Stage4AvatarCreation = await callAIStage(
+      "Avatar Creation",
+      4,
+      stage4Prompt,
+      2500
+    );
+
+    // Stage 5: Offer Design
+    const stage5Prompt = buildStage5OfferDesignPrompt(businessContext, stage1, stage2, stage3, stage4);
+    const stage5: Stage5OfferDesign = await callAIStage(
+      "Offer Design",
+      5,
+      stage5Prompt,
+      2500
+    );
+
+    // Compile complete research data
+    const completeData: CompleteResearchData = {
+      stage1_market_analysis: stage1,
+      stage2_buyer_psychology: stage2,
+      stage3_competitive_analysis: stage3,
+      stage4_avatar_creation: stage4,
+      stage5_offer_design: stage5,
+    };
+
+    const totalTime = Math.round((Date.now() - overallStart) / 1000);
+    console.log('🎉 All Research Stages Complete', {
+      totalTimeSeconds: totalTime,
+      totalTimeMinutes: (totalTime / 60).toFixed(1),
+      stagesCompleted: 5,
+    });
+
+    // Return the complete research data (Stage 6 synthesis happens in separate endpoint)
+    return c.json(completeData);
+
+  } catch (error) {
+    console.error('❌ Error in multi-stage research:', error);
+    return c.json({
+      error: 'Multi-stage research generation failed',
+      message: error instanceof Error ? error.message : String(error),
+      stage: 'unknown',
+    }, 500);
+  }
+});
+
+// Stage 6: Report Synthesis Endpoint (streams final markdown report)
+app.post("/api/research/synthesize", async (c) => {
+  try {
+    const payload = await c.req.json<{
+      context: BusinessContext;
+      researchData: CompleteResearchData;
+    }>();
+
+    const { context, researchData } = payload;
+
+    console.log('📝 Stage 6: Report Synthesis - Starting...', {
+      timestamp: new Date().toISOString(),
+      business: context.business_name,
+    });
+
+    // Check if AI binding is available
+    if (!c.env?.AI) {
+      console.warn("⚠️  AI binding not available - synthesis requires real AI deployment");
+      return streamText(c, async (stream) => {
+        stream.write("# Mock Report\n\nDeploy to see real synthesis.\n");
+      });
+    }
+
+    // Build Stage 6 prompt
+    const stage6Prompt = buildStage6ReportSynthesisPrompt(context, researchData);
+
+    const messages = [
+      { role: "system", content: "You are a professional market intelligence report writer. Create a comprehensive markdown report using ALL the provided research data." },
+      { role: "user", content: stage6Prompt }
+    ];
+
+    console.log('📏 Stage 6 Prompt Statistics', {
+      promptLength: stage6Prompt.length,
+      estimatedInputTokens: Math.ceil(stage6Prompt.length / 4),
+      maxOutputTokens: 6000,
+    });
+
+    // Stream the final report
+    let eventSourceStream;
+    let retryCount = 0;
+    let successfulInference = false;
+    let lastError;
+    const MAX_RETRIES = 3;
+
+    while (successfulInference === false && retryCount < MAX_RETRIES) {
+      try {
+        eventSourceStream = (await c.env.AI.run(
+          "@cf/meta/llama-3.1-70b-instruct",
+          {
+            messages,
+            stream: true,
+            max_tokens: 6000, // Comprehensive report
+          }
+        )) as ReadableStream;
+        successfulInference = true;
+      } catch (err) {
+        lastError = err;
+        retryCount++;
+        console.error('❌ Stage 6 attempt failed:', err);
+        console.log(`🔄 Retrying Stage 6 #${retryCount}...`);
+      }
+    }
+
+    if (eventSourceStream === undefined) {
+      throw lastError || new Error('Stage 6 synthesis failed');
+    }
+
+    const tokenStream = eventSourceStream
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream());
+
+    return streamText(c, async (stream) => {
+      let tokenCount = 0;
+      const startTime = Date.now();
+
+      for await (const msg of tokenStream) {
+        if (msg.data !== "[DONE]") {
+          const data = JSON.parse(msg.data);
+          stream.write(data.response);
+          tokenCount++;
+        }
+      }
+
+      const totalTime = Math.round((Date.now() - startTime) / 1000);
+      console.log('✅ Stage 6: Report Synthesis - Complete', {
+        totalTokens: tokenCount,
+        totalTimeSeconds: totalTime,
+      });
+    });
+
+  } catch (error) {
+    console.error('❌ Error in report synthesis:', error);
+    return c.json({
+      error: 'Report synthesis failed',
       message: error instanceof Error ? error.message : String(error),
     }, 500);
   }

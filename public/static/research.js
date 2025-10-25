@@ -2,6 +2,7 @@
 
 let currentStep = 1;
 const totalSteps = 3;
+let useMultiStage = false; // Toggle for multi-stage vs single-stage generation
 
 // Step navigation
 function nextStep(step) {
@@ -105,6 +106,213 @@ function checkContextQuality(context) {
   return true;
 }
 
+// Multi-stage progress tracking
+const stages = [
+  { id: 1, name: 'Market Analysis', status: 'pending', icon: '📊' },
+  { id: 2, name: 'Buyer Psychology', status: 'pending', icon: '🧠' },
+  { id: 3, name: 'Competitive Analysis', status: 'pending', icon: '🎯' },
+  { id: 4, name: 'Avatar Creation', status: 'pending', icon: '👤' },
+  { id: 5, name: 'Offer Design', status: 'pending', icon: '💎' },
+  { id: 6, name: 'Report Synthesis', status: 'pending', icon: '📝' },
+];
+
+function updateStageStatus(stageId, status) {
+  const stage = stages.find(s => s.id === stageId);
+  if (stage) {
+    stage.status = status;
+  }
+
+  const stageEl = document.getElementById(`stage-${stageId}`);
+  if (!stageEl) return;
+
+  // Update icon based on status
+  const iconEl = stageEl.querySelector('.stage-icon');
+  if (status === 'in_progress') {
+    iconEl.textContent = '⏳';
+    stageEl.classList.add('text-blue-600', 'font-semibold');
+  } else if (status === 'completed') {
+    iconEl.textContent = '✅';
+    stageEl.classList.remove('text-blue-600');
+    stageEl.classList.add('text-green-600');
+  } else if (status === 'error') {
+    iconEl.textContent = '❌';
+    stageEl.classList.remove('text-blue-600');
+    stageEl.classList.add('text-red-600');
+  }
+}
+
+function createStageProgressUI() {
+  const loadingState = document.getElementById('loading-state');
+  const loadingText = loadingState.querySelector('p');
+
+  // Create multi-stage progress display
+  const progressHTML = `
+    <div class="mt-6 space-y-2">
+      <div class="text-sm font-semibold mb-3">Generation Progress:</div>
+      ${stages.map(stage => `
+        <div id="stage-${stage.id}" class="flex items-center gap-2 text-sm">
+          <span class="stage-icon">${stage.icon}</span>
+          <span>${stage.name}</span>
+          <span class="ml-auto text-xs text-gray-500 stage-time"></span>
+        </div>
+      `).join('')}
+      <div class="mt-4 pt-4 border-t border-gray-300">
+        <div class="text-xs text-gray-600">
+          <strong>Total Estimated Time:</strong> 15-20 minutes<br>
+          <strong>Quality:</strong> Complete data, no placeholders ✨
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Insert after loading text
+  const progressContainer = document.createElement('div');
+  progressContainer.innerHTML = progressHTML;
+  loadingText.insertAdjacentElement('afterend', progressContainer);
+}
+
+// Multi-stage generation function
+async function generateMultiStageReport(businessContext) {
+  // Create progress UI
+  createStageProgressUI();
+
+  try {
+    // Stage 1-5: Research Data Collection
+    updateStageStatus(1, 'in_progress');
+    const stageStartTime = Date.now();
+
+    const multiStageResponse = await fetch('/api/research/multi-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(businessContext)
+    });
+
+    if (!multiStageResponse.ok) {
+      throw new Error(`Multi-stage failed: ${multiStageResponse.status}`);
+    }
+
+    const researchData = await multiStageResponse.json();
+
+    // Mark stages 1-5 as complete
+    for (let i = 1; i <= 5; i++) {
+      updateStageStatus(i, 'completed');
+    }
+
+    const stage5Time = Math.round((Date.now() - stageStartTime) / 1000);
+    console.log(`✅ Stages 1-5 complete in ${stage5Time}s`);
+
+    // Stage 6: Report Synthesis (streaming)
+    updateStageStatus(6, 'in_progress');
+
+    // Hide loading, show output
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('research-output').classList.remove('hidden');
+
+    const reportContent = document.getElementById('report-content');
+    reportContent.innerHTML = '<div class="text-gray-500 italic">Synthesizing final report... Almost done!</div>';
+
+    const synthesisResponse = await fetch('/api/research/synthesize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: businessContext,
+        researchData: researchData
+      })
+    });
+
+    if (!synthesisResponse.ok) {
+      throw new Error(`Synthesis failed: ${synthesisResponse.status}`);
+    }
+
+    // Stream the final report
+    const reader = synthesisResponse.body.pipeThrough(new TextDecoderStream()).getReader();
+    let fullReport = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      fullReport += value;
+
+      // Render markdown
+      if (window.markdownit) {
+        reportContent.innerHTML = window.markdownit({
+          html: true,
+          breaks: true,
+          linkify: true
+        }).render(fullReport);
+      } else {
+        reportContent.innerHTML = fullReport
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      }
+
+      reportContent.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    updateStageStatus(6, 'completed');
+
+    const totalTime = Math.round((Date.now() - stageStartTime) / 1000);
+    console.log(`🎉 Multi-stage generation complete in ${totalTime}s (${(totalTime / 60).toFixed(1)} minutes)`);
+
+    // Save final report
+    localStorage.setItem('last-research-report', fullReport);
+    localStorage.setItem('last-research-data', JSON.stringify(researchData));
+
+    return fullReport;
+
+  } catch (error) {
+    console.error('Multi-stage generation error:', error);
+
+    // Mark current stage as error
+    const currentStage = stages.find(s => s.status === 'in_progress');
+    if (currentStage) {
+      updateStageStatus(currentStage.id, 'error');
+    }
+
+    throw error;
+  }
+}
+
+// Setup report export and new report buttons
+function setupReportButtons(fullReport) {
+  document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(fullReport).then(() => {
+      const btn = document.getElementById('copy-btn');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('bg-green-700');
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('bg-green-700');
+      }, 2000);
+    }).catch(err => {
+      alert('Failed to copy. Please select and copy manually.');
+      console.error('Copy failed:', err);
+    });
+  };
+
+  document.getElementById('new-report-btn').onclick = () => {
+    if (confirm('Start a new report? Current form data will be cleared.')) {
+      location.reload();
+    }
+  };
+}
+
+// Toggle multi-stage mode
+function toggleMultiStage(enabled) {
+  useMultiStage = enabled;
+  localStorage.setItem('use-multi-stage', enabled);
+
+  const badge = document.getElementById('multi-stage-badge');
+  if (badge) {
+    badge.textContent = enabled ? '✨ Beta Multi-Stage Enabled' : 'Single-Stage Mode';
+    badge.className = enabled
+      ? 'text-xs px-2 py-1 rounded bg-blue-100 text-blue-800'
+      : 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-600';
+  }
+}
+
 // Form submission
 document.getElementById('research-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -134,6 +342,17 @@ document.getElementById('research-form').addEventListener('submit', async (e) =>
   localStorage.setItem('last-business-context', JSON.stringify(businessContext));
 
   try {
+    // Check if multi-stage is enabled
+    if (useMultiStage) {
+      // Use multi-stage generation
+      const fullReport = await generateMultiStageReport(businessContext);
+
+      // Setup export and new report buttons
+      setupReportButtons(fullReport);
+      return;
+    }
+
+    // Otherwise use single-stage generation (original flow)
     // Stream response from API
     const response = await fetch('/api/research', {
       method: 'POST',
@@ -183,29 +402,8 @@ document.getElementById('research-form').addEventListener('submit', async (e) =>
     // Save final report
     localStorage.setItem('last-research-report', fullReport);
 
-    // Setup export button
-    document.getElementById('copy-btn').onclick = () => {
-      navigator.clipboard.writeText(fullReport).then(() => {
-        const btn = document.getElementById('copy-btn');
-        const originalText = btn.textContent;
-        btn.textContent = '✅ Copied!';
-        btn.classList.add('bg-green-700');
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.classList.remove('bg-green-700');
-        }, 2000);
-      }).catch(err => {
-        alert('Failed to copy. Please select and copy manually.');
-        console.error('Copy failed:', err);
-      });
-    };
-
-    // Setup new report button
-    document.getElementById('new-report-btn').onclick = () => {
-      if (confirm('Start a new report? Current form data will be cleared.')) {
-        location.reload();
-      }
-    };
+    // Setup export and new report buttons
+    setupReportButtons(fullReport);
 
   } catch (error) {
     console.error('Error generating report:', error);
@@ -225,6 +423,13 @@ if (!window.markdownit) {
 // Initialize
 updateStepDisplay();
 updateProgressBar();
+
+// Load multi-stage preference from localStorage
+const savedMultiStage = localStorage.getItem('use-multi-stage');
+if (savedMultiStage === 'true') {
+  useMultiStage = true;
+  toggleMultiStage(true);
+}
 
 // Fill form with test data for quick testing
 function fillTestData() {
@@ -283,3 +488,4 @@ function fillTestData() {
 window.nextStep = nextStep;
 window.prevStep = prevStep;
 window.fillTestData = fillTestData;
+window.toggleMultiStage = toggleMultiStage;

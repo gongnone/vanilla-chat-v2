@@ -16,6 +16,25 @@ export const ResearchFormPage = () => (
           <p className="mt-2 text-blue-100">
             Get a professional Market Intelligence Report with offer design in 8-12 minutes
           </p>
+
+          {/* Multi-Stage Beta Toggle */}
+          <div className="mt-4 flex items-center gap-3 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer text-white">
+              <input
+                type="checkbox"
+                id="multi-stage-toggle"
+                onchange="toggleMultiStage(this.checked)"
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="font-medium">Use Beta Multi-Stage Generation</span>
+            </label>
+            <span id="multi-stage-badge" className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">
+              Single-Stage Mode
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-blue-200">
+            ✨ Multi-stage: 6 sequential AI calls for complete data, no placeholders (~15-20 min, higher quality)
+          </p>
         </div>
 
         {/* Progress Bar */}
