@@ -37,15 +37,19 @@ export function buildStage5OfferDesignPrompt(
 **Lifetime Value:** ${stage1.power_4_percent.lifetime_value}
 
 **Top 3 Fears:**
-${stage2.top_fears.slice(0, 3).map((f, i) => `${i + 1}. ${f.name}: "${f.quote}" - ${f.how_offer_addresses}`).join('\n')}
+1. ${stage2.fear_1}
+2. ${stage2.fear_2}
+3. ${stage2.fear_3}
 
 **Top 3 Desires:**
-${stage2.top_desires.slice(0, 3).map((d, i) => `${i + 1}. ${d.name}: "${d.aspirational_quote}" - ${d.how_business_delivers}`).join('\n')}
+1. ${stage2.desire_1}
+2. ${stage2.desire_2}
+3. ${stage2.desire_3}
 
 **Competitive UVP:** ${stage3.unique_value_proposition}
 
 **Avatar:** ${stage4.avatar_name}
-**Avatar Price Sensitivity:** ${stage4.price_sensitivity} - ${stage4.price_sensitivity_justification}
+**Avatar Price Sensitivity:** ${stage4.price_sensitivity} - ${stage4.price_sensitivity_reason}
 
 # YOUR TASK
 
@@ -93,24 +97,19 @@ For EACH plan provide:
 
 **Strategy**: Pay-in-full should save 10-15%, payment plans add 10-20% to total
 
-## 4. 15 Marketing Messages
+## 4. 9 Marketing Messages
 
-Create 15 high-converting marketing messages using buyer language from Stage 2:
+Create 9 high-converting marketing messages using buyer language from Stage 2:
 
-**5 Pain-Based Messages**: Hook using specific pain/frustration
-**5 Desire-Based Messages**: Hook using aspirational outcome
-**5 Curiosity-Based Messages**: Hook using intrigue/pattern interrupt
+**3 Pain-Based Messages**: Hook using specific pain/frustration
+**3 Desire-Based Messages**: Hook using aspirational outcome
+**3 Curiosity-Based Messages**: Hook using intrigue/pattern interrupt
 
-For EACH message provide:
-- **type**: "pain-based" | "desire-based" | "curiosity"
-- **headline**: 10-15 word headline/hook
-- **usage**: Where to use this (FB ad, email subject, landing page, etc.)
-
-Use ACTUAL buyer language phrases from Stage 2 - these should sound like something ${stage4.avatar_name} would say or resonate with.
+For EACH message provide one headline (10-15 words) that ${stage4.avatar_name} would resonate with.
 
 ## 5. Risk-Reversal Guarantee
 
-Create a guarantee that addresses the #1 fear: ${stage2.top_fears[0].name}
+Create a guarantee that addresses the #1 fear: ${stage2.fear_1}
 
 Provide:
 - **guarantee_text**: Full guarantee statement (50-100 words)
@@ -121,17 +120,12 @@ Provide:
 
 ## 6. Irresistible Bonuses
 
-Create 3-5 bonuses that:
-- Increase perceived value by 2-3x
-- Address desires from Stage 2
-- Speed up results or reduce friction
-- Have clear dollar value
+Create 3 bonuses that increase perceived value, address desires, and speed up results.
 
 For EACH bonus provide:
 - **name**: Compelling bonus name
 - **value**: Dollar value (e.g., "$497 value")
-- **addresses_desire**: Which desire from Stage 2 this addresses
-- **how_it_speeds_results**: How this accelerates transformation
+- **benefit**: One sentence on how it speeds results
 
 ## 7. First Campaign Recommendation
 
@@ -151,145 +145,62 @@ Return ONLY a valid JSON object with this exact structure:
 
 \`\`\`json
 {
-  "core_offer": {
-    "offer_name": "The [Transformation] Accelerator",
-    "target_outcome": "Specific measurable outcome achieved in X timeframe",
-    "pain_points_solved": [
-      "Specific pain point 1 from Stage 2",
-      "Specific pain point 2 from Stage 2",
-      "Specific pain point 3 from Stage 2"
-    ],
-    "desires_delivered": [
-      "Specific desire 1 from Stage 2",
-      "Specific desire 2 from Stage 2",
-      "Specific desire 3 from Stage 2"
-    ],
-    "unique_positioning": "Positioned as [unique angle] unlike competitors who [competitor approach], this [unique mechanism] delivers [specific outcome] in [timeframe] without [main objection]"
-  },
-  "pricing_tiers": [
-    {
-      "tier_number": 1,
-      "tier_name": "Foundation Program",
-      "price": "$4,997 one-time or 3 payments of $1,797",
-      "deliverables": [
-        "12 weeks of program access",
-        "Core framework and implementation templates",
-        "Weekly group coaching calls",
-        "Private community access",
-        "Email support (48hr response)"
-      ],
-      "best_for": "Those who are self-motivated and want guidance with community support",
-      "is_recommended": false
-    },
-    {
-      "tier_number": 2,
-      "tier_name": "VIP Accelerator",
-      "price": "$12,997 one-time or $3,000 down + $2,500/month x 4",
-      "deliverables": [
-        "12 weeks of intensive 1:1 coaching",
-        "Personalized strategy and implementation roadmap",
-        "Bi-weekly 60-min private coaching sessions",
-        "Unlimited email/Voxer support",
-        "Custom templates and frameworks",
-        "All Foundation Program deliverables",
-        "30-day post-program integration support",
-        "Accountability tracking and progress reviews"
-      ],
-      "best_for": "Power 4% buyers who value speed, personalization, and guaranteed results",
-      "is_recommended": true
-    },
-    {
-      "tier_number": 3,
-      "tier_name": "Done-With-You Platinum",
-      "price": "$24,997 one-time",
-      "deliverables": [
-        "Everything in VIP Accelerator",
-        "Weekly 90-min intensive sessions (vs bi-weekly 60-min)",
-        "Done-with-you implementation (I do it with you in real-time)",
-        "Direct phone/text access to coach",
-        "6-month post-program support (vs 30 days)",
-        "Fast-track timeline: 6 weeks vs 12 weeks",
-        "Priority scheduling and immediate response"
-      ],
-      "best_for": "Executives and high-performers who want maximum speed and white-glove support",
-      "is_recommended": false
-    }
-  ],
-  "payment_plans": [
-    {
-      "name": "Pay in Full (Save 10%)",
-      "structure": "$11,697 one-time payment",
-      "total_cost": "$11,697 (save $1,300)"
-    },
-    {
-      "name": "4-Month Payment Plan",
-      "structure": "$3,000 down payment + $2,500/month x 4 months",
-      "total_cost": "$13,000"
-    },
-    {
-      "name": "Extended 6-Month Plan",
-      "structure": "$2,000 down payment + $2,000/month x 6 months",
-      "total_cost": "$14,000"
-    }
-  ],
-  "marketing_messages": [
-    {
-      "type": "pain-based",
-      "headline": "Stop Spinning Your Wheels: Get Clarity and Results in 90 Days or Less",
-      "usage": "Facebook ad headline targeting warm audience who's been researching solutions"
-    },
-    {
-      "type": "pain-based",
-      "headline": "Working 60-Hour Weeks But Still Falling Behind? Here's Why (And How to Fix It)",
-      "usage": "Email subject line to engaged subscribers"
-    },
-    {
-      "type": "desire-based",
-      "headline": "What If You Could [Desired Outcome] Without [Main Fear/Objection]?",
-      "usage": "Landing page headline for cold traffic"
-    },
-    {
-      "type": "desire-based",
-      "headline": "Finally Be Fully Present With Your Family (Without Sacrificing Your Career)",
-      "usage": "Instagram ad targeting working parents in leadership"
-    },
-    {
-      "type": "curiosity",
-      "headline": "The Counterintuitive Strategy Top Performers Use to Get Ahead (While Working Less)",
-      "usage": "LinkedIn post or article headline"
-    }
-    // ... 10 more messages (total 15)
-  ],
-  "guarantee": {
-    "guarantee_text": "Complete the 12-week program, implement the frameworks as outlined, and attend all scheduled sessions. If you don't achieve [specific measurable outcome] within 90 days, we'll continue working with you at no additional cost until you do - or refund 100% of your investment. Your success is guaranteed, not just your satisfaction.",
-    "why_it_works": "This outcome-based guarantee addresses the #1 fear ('wasting money on another program that doesn't work') by tying refund to measurable results, not subjective satisfaction. It also includes performance accountability (must complete the work) which filters out bad-fit clients while building massive trust with serious buyers. The 'or we keep working' clause shows we're invested in their success, not just the sale."
-  },
-  "bonuses": [
-    {
-      "name": "Fast-Track Implementation Templates",
-      "value": "$1,497 value",
-      "addresses_desire": "Freedom Desire - want results faster without reinventing the wheel",
-      "how_it_speeds_results": "Pre-built templates eliminate 20+ hours of setup work and get you implementing within 48 hours vs 2-3 weeks"
-    },
-    {
-      "name": "Private 'Power Hour' Strategy Session",
-      "value": "$997 value",
-      "addresses_desire": "Validation Desire - want confidence they're on right track",
-      "how_it_speeds_results": "1:1 intensive removes decision paralysis and creates personalized roadmap in single session"
-    },
-    {
-      "name": "Lifetime Access to Program Updates",
-      "value": "$2,997 value",
-      "addresses_desire": "Security Desire - want ongoing support not one-time help",
-      "how_it_speeds_results": "Never worry about being left behind - you get all future updates, frameworks, and improvements"
-    }
-  ],
-  "first_campaign": {
-    "platform": "Facebook/Instagram to 'Women in Leadership' communities and lookalike audiences",
-    "message": "Working 60-Hour Weeks But Still Falling Behind? Here's Why (And How to Fix It)",
-    "offer_configuration": "Promote Tier 2 (VIP Accelerator) as recommended option with all 3 bonuses included. Present Tier 1 as alternative for budget-conscious, Tier 3 for those who want speed. Lead with pain-based message since research shows higher engagement Sunday evenings when week anxiety peaks.",
-    "launch_timeline": "Launch Sunday 6pm EST (optimal contact time), run 5-day campaign through Friday. Use scarcity: 'Only accepting 5 new clients this month.' Close Friday 11:59pm. Follow up with waitlist email Saturday for those who missed deadline."
-  }
+  "offer_name": "The [Transformation] Accelerator",
+  "target_outcome": "Specific measurable outcome in X timeframe",
+  "pain_points_solved": "Pain 1, Pain 2, Pain 3 from Stage 2",
+  "desires_delivered": "Desire 1, Desire 2, Desire 3 from Stage 2",
+  "unique_positioning": "Positioned as [unique angle] unlike competitors who [competitor approach], delivers [outcome] in [timeframe] without [objection]",
+
+  "tier_1_name": "Foundation Program",
+  "tier_1_price": "$4,997 one-time or 3 payments of $1,797",
+  "tier_1_deliverables": "12 weeks program access, Core framework templates, Weekly group coaching, Private community, Email support 48hr",
+  "tier_1_best_for": "Self-motivated wanting guidance with community support",
+
+  "tier_2_name": "VIP Accelerator ⭐ RECOMMENDED",
+  "tier_2_price": "$12,997 one-time or $3,000 down + $2,500/month x 4",
+  "tier_2_deliverables": "12 weeks intensive 1:1 coaching, Personalized strategy roadmap, Bi-weekly 60-min sessions, Unlimited email/Voxer, Custom templates, All Foundation deliverables, 30-day post-program support, Accountability tracking",
+  "tier_2_best_for": "Power 4% buyers who value speed, personalization, guaranteed results",
+
+  "tier_3_name": "Done-With-You Platinum",
+  "tier_3_price": "$24,997 one-time",
+  "tier_3_deliverables": "Everything in VIP, Weekly 90-min sessions, Done-with-you implementation, Direct phone/text access, 6-month post-program support, Fast-track 6 weeks vs 12, Priority scheduling",
+  "tier_3_best_for": "Executives wanting maximum speed and white-glove support",
+
+  "payment_plan_1": "Pay in Full: $11,697 one-time (save $1,300)",
+  "payment_plan_2": "4-Month Plan: $3,000 down + $2,500/month x 4 = $13,000 total",
+  "payment_plan_3": "6-Month Plan: $2,000 down + $2,000/month x 6 = $14,000 total",
+
+  "pain_message_1": "Stop Spinning Your Wheels: Get Clarity and Results in 90 Days or Less",
+  "pain_message_2": "Working 60-Hour Weeks But Still Falling Behind? Here's Why (And How to Fix It)",
+  "pain_message_3": "Drowning in Tasks with No Time for What Actually Matters? There's a Better Way",
+
+  "desire_message_1": "What If You Could [Desired Outcome] Without [Main Fear/Objection]?",
+  "desire_message_2": "Finally Be Fully Present With Your Family (Without Sacrificing Your Career)",
+  "desire_message_3": "Get Promoted to [Next Level] While Working 20% Fewer Hours",
+
+  "curiosity_message_1": "The Counterintuitive Strategy Top Performers Use to Get Ahead (While Working Less)",
+  "curiosity_message_2": "Why the 'Hustle Harder' Advice is Keeping You Stuck (And What to Do Instead)",
+  "curiosity_message_3": "The One Thing Successful [Role] Do Differently That Nobody Talks About",
+
+  "guarantee_text": "Complete the program, implement frameworks, attend sessions. If you don't achieve [specific outcome] within 90 days, we continue at no cost until you do - or refund 100%. Success guaranteed, not just satisfaction.",
+  "guarantee_why": "Outcome-based guarantee addresses #1 fear by tying refund to measurable results. Performance accountability filters bad-fit clients while building trust. 'Keep working' clause shows investment in success not just sale.",
+
+  "bonus_1_name": "Fast-Track Implementation Templates",
+  "bonus_1_value": "$1,497",
+  "bonus_1_benefit": "Pre-built templates eliminate 20+ hours setup, get implementing within 48 hours vs 2-3 weeks",
+
+  "bonus_2_name": "Private 'Power Hour' Strategy Session",
+  "bonus_2_value": "$997",
+  "bonus_2_benefit": "1:1 intensive removes decision paralysis, creates personalized roadmap in single session",
+
+  "bonus_3_name": "Lifetime Access to Program Updates",
+  "bonus_3_value": "$2,997",
+  "bonus_3_benefit": "Never worry about being left behind - get all future updates, frameworks, improvements",
+
+  "campaign_platform": "Facebook/Instagram to 'Women in Leadership' communities and lookalike audiences",
+  "campaign_message": "Working 60-Hour Weeks But Still Falling Behind? Here's Why (And How to Fix It)",
+  "campaign_offer": "Promote Tier 2 (VIP) as recommended with all 3 bonuses. Present Tier 1 for budget-conscious, Tier 3 for speed. Lead with pain-based message for Sunday evening engagement.",
+  "campaign_timeline": "Launch Sunday 6pm EST, run 5 days through Friday. Scarcity: 'Only 5 new clients this month.' Close Friday 11:59pm. Waitlist email Saturday."
 }
 \`\`\`
 

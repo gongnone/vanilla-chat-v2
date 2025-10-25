@@ -34,54 +34,46 @@ export function buildStage3CompetitiveAnalysisPrompt(
 **Power 4% Target:** ${stage1.power_4_percent.demographics}
 
 **Top 3 Buyer Fears:**
-${stage2.top_fears.slice(0, 3).map(f => `- ${f.name}: ${f.quote}`).join('\n')}
+- ${stage2.fear_1} (intensity: ${stage2.fear_1_intensity}/10)
+- ${stage2.fear_2} (intensity: ${stage2.fear_2_intensity}/10)
+- ${stage2.fear_3} (intensity: ${stage2.fear_3_intensity}/10)
 
 **Top 3 Buyer Desires:**
-${stage2.top_desires.slice(0, 3).map(d => `- ${d.name}: ${d.aspirational_quote}`).join('\n')}
+- ${stage2.desire_1} (intensity: ${stage2.desire_1_intensity}/10)
+- ${stage2.desire_2} (intensity: ${stage2.desire_2_intensity}/10)
+- ${stage2.desire_3} (intensity: ${stage2.desire_3_intensity}/10)
 
 # YOUR TASK
 
 Research the competitive landscape and return a structured JSON object with actionable competitive intelligence.
 
-## 1. Competitor Research (3-5 competitors)
+## 1. Competitor Research (3 competitors)
 
-Identify 3-5 DIRECT competitors in the ${niche} space who serve similar target markets.
+Identify 3 DIRECT competitors in the ${niche} space who serve similar target markets.
 
 ${competitors_offers ? `Start with these known competitors: ${competitors_offers}` : 'Research and identify the top competitors in this space.'}
 
 For EACH competitor provide:
 - **name**: Business/product name
 - **price_point**: Exact pricing (e.g., "$2,997 one-time" or "$497/month")
-- **positioning**: How they position themselves (premium, budget, results-focused, etc.)
-- **strengths**: What they do well (2-3 specific strengths)
-- **weaknesses**: Where they fall short (2-3 specific weaknesses)
-- **target_audience**: Who they primarily serve (be specific)
+- **positioning**: Single sentence positioning (premium, budget, results-focused, etc.)
+- **strengths**: 2 specific strengths as comma-separated string
+- **weaknesses**: 2 specific weaknesses as comma-separated string
+- **target_audience**: One-line description of who they serve
 
 **Research Sources**: Competitor websites, reviews, social media, online communities where customers compare options
 
 ## 2. Positioning Gap Analysis
 
-Based on competitor research, identify 5-7 SPECIFIC positioning gaps where ${business_name} can win:
+Based on competitor research, identify 5 SPECIFIC positioning gaps where ${business_name} can win.
 
-Examples:
-- "Competitors focus on [X], but buyers actually want [Y]"
-- "No competitor addresses [specific fear/desire from Stage 2]"
-- "All competitors use [delivery format], creating opportunity for [alternative]"
-- "Price gap between $500 DIY options and $10K+ high-touch programs"
-
-Be SPECIFIC about the gap and WHY it matters to the Power 4% target audience.
+Each gap should be a single sentence explaining the specific opportunity.
 
 ## 3. Differentiation Opportunities
 
-List 5-7 ways ${business_name} can differentiate using:
-- **Unique Mechanism:** ${unique_mechanism}
-- **Buyer Psychology:** Fears and desires from Stage 2
-- **Market Gaps:** Identified positioning gaps
+List 5 ways ${business_name} can differentiate.
 
-Each opportunity should be:
-- Specific and actionable
-- Tied to buyer psychology (what they actually want)
-- Defensible (not easily copied)
+Each opportunity should be a single specific sentence.
 
 ## 4. Unique Value Proposition
 
@@ -105,12 +97,9 @@ Analyze pricing landscape:
 
 ## 6. Why This Business Wins
 
-Based on ALL analysis, provide 5-7 specific reasons why ${business_name} will win against competitors:
+Based on ALL analysis, provide 5 specific reasons why ${business_name} will win against competitors.
 
-- Must reference unique mechanism
-- Must tie to buyer psychology (fears/desires)
-- Must leverage positioning gaps
-- Must be defensible competitive advantages
+Each reason should be one specific sentence.
 
 # OUTPUT FORMAT
 
@@ -118,39 +107,47 @@ Return ONLY a valid JSON object with this exact structure:
 
 \`\`\`json
 {
-  "competitors": [
-    {
-      "name": "Competitor Business Name",
-      "price_point": "$3,000 for 12 weeks",
-      "positioning": "Premium results-focused program for executives",
-      "strengths": "Strong brand recognition, proven track record with 500+ testimonials, comprehensive curriculum",
-      "weaknesses": "Generic approach, no personalization, 12-week timeline too long for urgent needs, limited support after program",
-      "target_audience": "Corporate executives 35-55, $150K+ income, seeking career advancement"
-    }
-    // ... 2-4 more competitors
-  ],
-  "positioning_gaps": [
-    "All competitors use group coaching format, but Power 4% segment explicitly wants 1:1 personalized attention and is willing to pay premium for it",
-    "No competitor addresses the fear of 'wasting time on another program that doesn't work' - they focus on features rather than guaranteed outcomes",
-    "Competitors position around 'more knowledge' but buyers are overwhelmed - opportunity to position around 'clarity and implementation' instead"
-    // ... 4-6 total gaps
-  ],
-  "differentiation_opportunities": [
-    "Unique Mechanism (${unique_mechanism}) is proprietary and solves the problem in a novel way that competitors don't address",
-    "Positioning around 'done-with-you' vs competitors' 'do-it-yourself' approach speaks to Power 4% desire for support and speed",
-    "Money-back guarantee based on completion metrics (not just satisfaction) addresses fear of wasting money"
-    // ... 4-6 total opportunities
-  ],
-  "unique_value_proposition": "We help [specific Power 4% target] achieve [specific transformation] through [unique mechanism] without [biggest fear/objection] - guaranteed results in [timeframe] or money back",
-  "competitive_pricing_analysis": "Budget competitors: $200-$800 (DIY courses, group programs). Mid-tier: $1,500-$4,000 (hybrid coaching, group with some 1:1). Premium: $5,000-$15,000+ (high-touch 1:1, done-for-you). Current price of ${price_point_current} positions in [tier]. Target price of ${desired_price_point || 'premium'} justified by: [specific value gaps - personalization, guarantee, speed, unique mechanism, results]. Power 4% segment currently wastes $5K-15K on partial solutions, making premium pricing a value play.",
-  "why_business_wins": [
-    "Unique Mechanism directly addresses root cause while competitors treat symptoms - creates better results faster",
-    "Only solution addressing the #1 fear (from Stage 2) with structural guarantee, not just promises",
-    "Positioned for Power 4% who value speed and certainty over saving money - underserved segment",
-    "1:1 personalization vs generic group programs creates 10x better outcomes for premium buyers",
-    "Fills pricing gap between $3K mid-tier and $15K high-end - premium quality at accessible price point"
-    // ... 5-7 total reasons
-  ]
+  "competitor_1_name": "Competitor Business Name 1",
+  "competitor_1_price": "$3,000 for 12 weeks",
+  "competitor_1_positioning": "Premium results-focused program for executives",
+  "competitor_1_strengths": "Strong brand recognition, proven track record",
+  "competitor_1_weaknesses": "Generic approach, no personalization",
+  "competitor_1_target": "Corporate executives 35-55, $150K+ income",
+
+  "competitor_2_name": "Competitor Business Name 2",
+  "competitor_2_price": "$1,500 for 8 weeks",
+  "competitor_2_positioning": "Mid-tier group coaching program",
+  "competitor_2_strengths": "Affordable pricing, active community",
+  "competitor_2_weaknesses": "Limited 1:1 support, slow results",
+  "competitor_2_target": "Mid-level managers 30-45",
+
+  "competitor_3_name": "Competitor Business Name 3",
+  "competitor_3_price": "$10,000+ for 6 months",
+  "competitor_3_positioning": "High-end executive coaching",
+  "competitor_3_strengths": "White-glove service, executive network",
+  "competitor_3_weaknesses": "Prohibitively expensive, generic curriculum",
+  "competitor_3_target": "C-suite executives $500K+ income",
+
+  "gap_1": "All competitors use group coaching format, but Power 4% segment wants 1:1 personalized attention",
+  "gap_2": "No competitor addresses fear of wasting time with outcome guarantees",
+  "gap_3": "Competitors focus on knowledge but buyers want clarity and implementation",
+  "gap_4": "Price gap between $1.5K mid-tier and $10K+ high-end creates opportunity",
+  "gap_5": "No competitor emphasizes speed - all have 12+ week timelines",
+
+  "diff_1": "Unique Mechanism solves problem in novel way competitors don't address",
+  "diff_2": "Done-with-you vs do-it-yourself approach speaks to Power 4% desire for support",
+  "diff_3": "Outcome-based guarantee addresses fear of wasting money",
+  "diff_4": "6-8 week timeline vs competitors' 12+ weeks delivers results faster",
+  "diff_5": "1:1 personalization at mid-tier price point (best of both worlds)",
+
+  "unique_value_proposition": "We help [Power 4% target] achieve [transformation] through [unique mechanism] without [main fear] - guaranteed results in [timeframe] or money back",
+  "pricing_analysis": "Budget: $500-$1.5K (DIY/group). Mid-tier: $1.5K-$4K (hybrid). Premium: $5K-$15K+ (1:1/done-for-you). Current price fits [tier]. Target price justified by: personalization, guarantee, speed, unique mechanism. Power 4% wastes $5K-15K annually on partial solutions.",
+
+  "win_reason_1": "Unique Mechanism addresses root cause while competitors treat symptoms",
+  "win_reason_2": "Only solution with outcome-based guarantee vs generic satisfaction promises",
+  "win_reason_3": "Positioned for Power 4% who value speed and certainty over price",
+  "win_reason_4": "1:1 personalization creates 10x better outcomes than generic group programs",
+  "win_reason_5": "Fills pricing gap - premium quality at accessible price point"
 }
 \`\`\`
 
