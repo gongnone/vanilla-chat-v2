@@ -358,9 +358,11 @@ app.post("/api/research/multi-stage", async (c) => {
       stageName: string,
       stageNumber: number,
       prompt: string,
-      maxTokens: number = 2500
+      maxTokens: number = 2500,
+      modelName: string = "@cf/meta/llama-3.1-70b-instruct"
     ): Promise<T> {
       console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
+        model: modelName,
         maxTokens,
         estimatedInputTokens: Math.ceil(prompt.length / 4),
       });
@@ -378,7 +380,7 @@ app.post("/api/research/multi-stage", async (c) => {
       while (retryCount < MAX_RETRIES) {
         try {
           const response = await c.env.AI.run(
-            "@cf/meta/llama-3.1-70b-instruct",
+            modelName,
             {
               messages,
               max_tokens: maxTokens,
@@ -428,49 +430,58 @@ app.post("/api/research/multi-stage", async (c) => {
     // Execute all 6 stages sequentially
     const overallStart = Date.now();
 
-    // Stage 1: Market Analysis
+    // Model specialization: DeepSeek R1 for research/analysis, Llama 70B for creative/writing
+    const RESEARCH_MODEL = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b";
+    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+
+    // Stage 1: Market Analysis (Research specialist)
     const stage1Prompt = buildStage1MarketAnalysisPrompt(businessContext);
     const stage1: Stage1MarketAnalysis = await callAIStage(
       "Market Analysis",
       1,
       stage1Prompt,
-      2500
+      2500,
+      RESEARCH_MODEL
     );
 
-    // Stage 2: Buyer Psychology
+    // Stage 2: Buyer Psychology (Research specialist)
     const stage2Prompt = buildStage2BuyerPsychologyPrompt(businessContext, stage1);
     const stage2: Stage2BuyerPsychology = await callAIStage(
       "Buyer Psychology",
       2,
       stage2Prompt,
-      3000
+      3000,
+      RESEARCH_MODEL
     );
 
-    // Stage 3: Competitive Analysis
+    // Stage 3: Competitive Analysis (Research specialist)
     const stage3Prompt = buildStage3CompetitiveAnalysisPrompt(businessContext, stage1, stage2);
     const stage3: Stage3CompetitiveAnalysis = await callAIStage(
       "Competitive Analysis",
       3,
       stage3Prompt,
-      2000
+      2000,
+      RESEARCH_MODEL
     );
 
-    // Stage 4: Avatar Creation
+    // Stage 4: Avatar Creation (Creative specialist for narratives)
     const stage4Prompt = buildStage4AvatarCreationPrompt(businessContext, stage1, stage2, stage3);
     const stage4: Stage4AvatarCreation = await callAIStage(
       "Avatar Creation",
       4,
       stage4Prompt,
-      2500
+      2500,
+      CREATIVE_MODEL
     );
 
-    // Stage 5: Offer Design
+    // Stage 5: Offer Design (Creative specialist for marketing messages)
     const stage5Prompt = buildStage5OfferDesignPrompt(businessContext, stage1, stage2, stage3, stage4);
     const stage5: Stage5OfferDesign = await callAIStage(
       "Offer Design",
       5,
       stage5Prompt,
-      2500
+      2500,
+      CREATIVE_MODEL
     );
 
     // Compile complete research data
@@ -487,6 +498,10 @@ app.post("/api/research/multi-stage", async (c) => {
       totalTimeSeconds: totalTime,
       totalTimeMinutes: (totalTime / 60).toFixed(1),
       stagesCompleted: 5,
+      modelsUsed: {
+        research: RESEARCH_MODEL + ' (Stages 1-3)',
+        creative: CREATIVE_MODEL + ' (Stages 4-5)'
+      }
     });
 
     // Return the complete research data (Stage 6 synthesis happens in separate endpoint)
@@ -533,7 +548,11 @@ app.post("/api/research/synthesize", async (c) => {
       { role: "user", content: stage6Prompt }
     ];
 
+    // Use creative model for final synthesis (long-form writing)
+    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+
     console.log('📏 Stage 6 Prompt Statistics', {
+      model: SYNTHESIS_MODEL,
       promptLength: stage6Prompt.length,
       estimatedInputTokens: Math.ceil(stage6Prompt.length / 4),
       maxOutputTokens: 6000,
@@ -549,7 +568,7 @@ app.post("/api/research/synthesize", async (c) => {
     while (successfulInference === false && retryCount < MAX_RETRIES) {
       try {
         eventSourceStream = (await c.env.AI.run(
-          "@cf/meta/llama-3.1-70b-instruct",
+          SYNTHESIS_MODEL,
           {
             messages,
             stream: true,
