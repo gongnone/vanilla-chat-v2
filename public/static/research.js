@@ -177,26 +177,91 @@ async function generateMultiStageReport(businessContext) {
   createStageProgressUI();
 
   try {
-    // Stage 1-5: Research Data Collection
-    updateStageStatus(1, 'in_progress');
     const stageStartTime = Date.now();
 
-    const multiStageResponse = await fetch('/api/research/multi-stage', {
+    // Stage 1: Market Analysis (No dependencies)
+    updateStageStatus(1, 'in_progress');
+    const stage1Response = await fetch('/api/research/stage/1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(businessContext)
     });
 
-    if (!multiStageResponse.ok) {
-      throw new Error(`Multi-stage failed: ${multiStageResponse.status}`);
+    if (!stage1Response.ok) {
+      throw new Error(`Stage 1 failed: ${stage1Response.status}`);
     }
 
-    const researchData = await multiStageResponse.json();
+    const stage1 = await stage1Response.json();
+    updateStageStatus(1, 'completed');
 
-    // Mark stages 1-5 as complete
-    for (let i = 1; i <= 5; i++) {
-      updateStageStatus(i, 'completed');
+    // Stage 2: Buyer Psychology (Depends on Stage 1)
+    updateStageStatus(2, 'in_progress');
+    const stage2Response = await fetch('/api/research/stage/2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ context: businessContext, stage1 })
+    });
+
+    if (!stage2Response.ok) {
+      throw new Error(`Stage 2 failed: ${stage2Response.status}`);
     }
+
+    const stage2 = await stage2Response.json();
+    updateStageStatus(2, 'completed');
+
+    // Stage 3: Competitive Analysis (Depends on Stages 1-2)
+    updateStageStatus(3, 'in_progress');
+    const stage3Response = await fetch('/api/research/stage/3', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ context: businessContext, stage1, stage2 })
+    });
+
+    if (!stage3Response.ok) {
+      throw new Error(`Stage 3 failed: ${stage3Response.status}`);
+    }
+
+    const stage3 = await stage3Response.json();
+    updateStageStatus(3, 'completed');
+
+    // Stage 4: Avatar Creation (Depends on Stages 1-3)
+    updateStageStatus(4, 'in_progress');
+    const stage4Response = await fetch('/api/research/stage/4', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ context: businessContext, stage1, stage2, stage3 })
+    });
+
+    if (!stage4Response.ok) {
+      throw new Error(`Stage 4 failed: ${stage4Response.status}`);
+    }
+
+    const stage4 = await stage4Response.json();
+    updateStageStatus(4, 'completed');
+
+    // Stage 5: Offer Design (Depends on Stages 1-4)
+    updateStageStatus(5, 'in_progress');
+    const stage5Response = await fetch('/api/research/stage/5', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ context: businessContext, stage1, stage2, stage3, stage4 })
+    });
+
+    if (!stage5Response.ok) {
+      throw new Error(`Stage 5 failed: ${stage5Response.status}`);
+    }
+
+    const stage5 = await stage5Response.json();
+    updateStageStatus(5, 'completed');
+
+    // Compile complete research data
+    const researchData = {
+      stage1_market_analysis: stage1,
+      stage2_buyer_psychology: stage2,
+      stage3_competitive_analysis: stage3,
+      stage4_avatar_creation: stage4,
+      stage5_offer_design: stage5
+    };
 
     const stage5Time = Math.round((Date.now() - stageStartTime) / 1000);
     console.log(`✅ Stages 1-5 complete in ${stage5Time}s`);

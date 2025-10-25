@@ -332,199 +332,243 @@ app.post("/api/research", async (c) => {
   }
 });
 
-// Multi-Stage Research Orchestration Endpoint
-app.post("/api/research/multi-stage", async (c) => {
+// Multi-Stage Research - Individual Stage Endpoints
+// Each stage is a separate endpoint to avoid 60s Pages Function timeout
+
+// Model configuration
+const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 1-3
+const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5
+
+// Helper function to call AI and parse JSON response
+async function callAIStage<T>(
+  c: any,
+  stageName: string,
+  stageNumber: number,
+  prompt: string,
+  maxTokens: number = 2500,
+  modelName: string = RESEARCH_MODEL
+): Promise<T> {
+  // Check AI binding
+  if (!c.env?.AI) {
+    throw new Error('AI binding not available');
+  }
+
+  console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
+    model: modelName,
+    maxTokens,
+    estimatedInputTokens: Math.ceil(prompt.length / 4),
+  });
+
+  const startTime = Date.now();
+  const messages = [
+    { role: "system", content: "You are a professional market research analyst. Return ONLY valid JSON as specified in the prompt." },
+    { role: "user", content: prompt }
+  ];
+
+  let retryCount = 0;
+  const MAX_RETRIES = 3;
+  let lastError: any;
+
+  while (retryCount < MAX_RETRIES) {
+    try {
+      console.log(`⏱️  Stage ${stageNumber}: Calling AI with model ${modelName}...`);
+
+      // Add timeout wrapper (Workers AI calls should complete in <30s)
+      const aiCallPromise = c.env.AI.run(
+        modelName,
+        {
+          messages,
+          max_tokens: maxTokens,
+          stream: false, // CRITICAL: Must be false for JSON responses
+        }
+      );
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('AI call timeout after 45s')), 45000)
+      );
+
+      const response = await Promise.race([aiCallPromise, timeoutPromise]) as any;
+      console.log(`✓ Stage ${stageNumber}: AI response received`);
+
+      // Extract the response text
+      const responseText = response.response || JSON.stringify(response);
+
+      console.log(`✅ Stage ${stageNumber}: ${stageName} - Raw response received`, {
+        responseLength: responseText.length,
+        elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
+      });
+
+      // Try to parse JSON - handle markdown code blocks if present
+      let jsonText = responseText.trim();
+
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsedData = JSON.parse(jsonText) as T;
+
+      console.log(`✅ Stage ${stageNumber}: ${stageName} - Complete`, {
+        totalTimeSeconds: Math.round((Date.now() - startTime) / 1000),
+      });
+
+      return parsedData;
+    } catch (err) {
+      lastError = err;
+      retryCount++;
+      console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, err);
+
+      if (retryCount < MAX_RETRIES) {
+        console.log(`🔄 Retrying stage ${stageNumber}...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+      }
+    }
+  }
+
+  throw new Error(`Stage ${stageNumber} (${stageName}) failed after ${MAX_RETRIES} attempts: ${lastError}`);
+}
+
+// Stage 1: Market Analysis (No dependencies)
+app.post("/api/research/stage/1", async (c) => {
   try {
     const businessContext: BusinessContext = await c.req.json();
 
-    console.log('🚀 Multi-Stage Research Generation Started', {
-      timestamp: new Date().toISOString(),
-      business: businessContext.business_name,
-      niche: businessContext.niche,
-      stages: 6,
-    });
-
-    // Check if AI binding is available
-    if (!c.env?.AI) {
-      console.warn("⚠️  AI binding not available - multi-stage requires real AI deployment");
-      return c.json({
-        error: 'Multi-stage research requires AI deployment',
-        message: 'Deploy with: npm run preview:remote',
-      }, 503);
-    }
-
-    // Helper function to call AI and parse JSON response
-    async function callAIStage<T>(
-      stageName: string,
-      stageNumber: number,
-      prompt: string,
-      maxTokens: number = 2500,
-      modelName: string = "@cf/meta/llama-3.1-70b-instruct"
-    ): Promise<T> {
-      console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
-        model: modelName,
-        maxTokens,
-        estimatedInputTokens: Math.ceil(prompt.length / 4),
-      });
-
-      const startTime = Date.now();
-      const messages = [
-        { role: "system", content: "You are a professional market research analyst. Return ONLY valid JSON as specified in the prompt." },
-        { role: "user", content: prompt }
-      ];
-
-      let retryCount = 0;
-      const MAX_RETRIES = 3;
-      let lastError: any;
-
-      while (retryCount < MAX_RETRIES) {
-        try {
-          console.log(`⏱️  Stage ${stageNumber}: Calling AI with model ${modelName}...`);
-
-          // Add timeout wrapper (Workers AI calls should complete in <30s)
-          const aiCallPromise = c.env.AI.run(
-            modelName,
-            {
-              messages,
-              max_tokens: maxTokens,
-              stream: false, // CRITICAL: Must be false for JSON responses
-            }
-          );
-
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('AI call timeout after 45s')), 45000)
-          );
-
-          const response = await Promise.race([aiCallPromise, timeoutPromise]) as any;
-          console.log(`✓ Stage ${stageNumber}: AI response received`);
-
-          // Extract the response text
-          const responseText = response.response || JSON.stringify(response);
-
-          console.log(`✅ Stage ${stageNumber}: ${stageName} - Raw response received`, {
-            responseLength: responseText.length,
-            elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
-          });
-
-          // Try to parse JSON - handle markdown code blocks if present
-          let jsonText = responseText.trim();
-
-          // Remove markdown code blocks if present
-          if (jsonText.startsWith('```json')) {
-            jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-          } else if (jsonText.startsWith('```')) {
-            jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-          }
-
-          const parsedData = JSON.parse(jsonText) as T;
-
-          console.log(`✅ Stage ${stageNumber}: ${stageName} - Complete`, {
-            totalTimeSeconds: Math.round((Date.now() - startTime) / 1000),
-          });
-
-          return parsedData;
-        } catch (err) {
-          lastError = err;
-          retryCount++;
-          console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, err);
-
-          if (retryCount < MAX_RETRIES) {
-            console.log(`🔄 Retrying stage ${stageNumber}...`);
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
-          }
-        }
-      }
-
-      throw new Error(`Stage ${stageNumber} (${stageName}) failed after ${MAX_RETRIES} attempts: ${lastError}`);
-    }
-
-    // Execute all 6 stages sequentially
-    const overallStart = Date.now();
-
-    // Model specialization: Using same proven Llama 70B for all stages to ensure reliability
-    // TODO: Can experiment with smaller models once we confirm multi-stage works end-to-end
-    const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Proven, reliable
-    const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Proven, reliable
-
-    // Stage 1: Market Analysis (Research specialist)
-    const stage1Prompt = buildStage1MarketAnalysisPrompt(businessContext);
-    const stage1: Stage1MarketAnalysis = await callAIStage(
+    const prompt = buildStage1MarketAnalysisPrompt(businessContext);
+    const result: Stage1MarketAnalysis = await callAIStage(
+      c,
       "Market Analysis",
       1,
-      stage1Prompt,
+      prompt,
       2500,
       RESEARCH_MODEL
     );
 
-    // Stage 2: Buyer Psychology (Research specialist)
-    const stage2Prompt = buildStage2BuyerPsychologyPrompt(businessContext, stage1);
-    const stage2: Stage2BuyerPsychology = await callAIStage(
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 1 error:', error);
+    return c.json({
+      error: 'Stage 1 failed',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
+});
+
+// Stage 2: Buyer Psychology (Depends on Stage 1)
+app.post("/api/research/stage/2", async (c) => {
+  try {
+    const { context, stage1 } = await c.req.json<{
+      context: BusinessContext;
+      stage1: Stage1MarketAnalysis;
+    }>();
+
+    const prompt = buildStage2BuyerPsychologyPrompt(context, stage1);
+    const result: Stage2BuyerPsychology = await callAIStage(
+      c,
       "Buyer Psychology",
       2,
-      stage2Prompt,
+      prompt,
       3000,
       RESEARCH_MODEL
     );
 
-    // Stage 3: Competitive Analysis (Research specialist)
-    const stage3Prompt = buildStage3CompetitiveAnalysisPrompt(businessContext, stage1, stage2);
-    const stage3: Stage3CompetitiveAnalysis = await callAIStage(
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 2 error:', error);
+    return c.json({
+      error: 'Stage 2 failed',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
+});
+
+// Stage 3: Competitive Analysis (Depends on Stages 1-2)
+app.post("/api/research/stage/3", async (c) => {
+  try {
+    const { context, stage1, stage2 } = await c.req.json<{
+      context: BusinessContext;
+      stage1: Stage1MarketAnalysis;
+      stage2: Stage2BuyerPsychology;
+    }>();
+
+    const prompt = buildStage3CompetitiveAnalysisPrompt(context, stage1, stage2);
+    const result: Stage3CompetitiveAnalysis = await callAIStage(
+      c,
       "Competitive Analysis",
       3,
-      stage3Prompt,
+      prompt,
       2000,
       RESEARCH_MODEL
     );
 
-    // Stage 4: Avatar Creation (Creative specialist for narratives)
-    const stage4Prompt = buildStage4AvatarCreationPrompt(businessContext, stage1, stage2, stage3);
-    const stage4: Stage4AvatarCreation = await callAIStage(
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 3 error:', error);
+    return c.json({
+      error: 'Stage 3 failed',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
+});
+
+// Stage 4: Avatar Creation (Depends on Stages 1-3)
+app.post("/api/research/stage/4", async (c) => {
+  try {
+    const { context, stage1, stage2, stage3 } = await c.req.json<{
+      context: BusinessContext;
+      stage1: Stage1MarketAnalysis;
+      stage2: Stage2BuyerPsychology;
+      stage3: Stage3CompetitiveAnalysis;
+    }>();
+
+    const prompt = buildStage4AvatarCreationPrompt(context, stage1, stage2, stage3);
+    const result: Stage4AvatarCreation = await callAIStage(
+      c,
       "Avatar Creation",
       4,
-      stage4Prompt,
+      prompt,
       2500,
       CREATIVE_MODEL
     );
 
-    // Stage 5: Offer Design (Creative specialist for marketing messages)
-    const stage5Prompt = buildStage5OfferDesignPrompt(businessContext, stage1, stage2, stage3, stage4);
-    const stage5: Stage5OfferDesign = await callAIStage(
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 4 error:', error);
+    return c.json({
+      error: 'Stage 4 failed',
+      message: error instanceof Error ? error.message : String(error),
+    }, 500);
+  }
+});
+
+// Stage 5: Offer Design (Depends on Stages 1-4)
+app.post("/api/research/stage/5", async (c) => {
+  try {
+    const { context, stage1, stage2, stage3, stage4 } = await c.req.json<{
+      context: BusinessContext;
+      stage1: Stage1MarketAnalysis;
+      stage2: Stage2BuyerPsychology;
+      stage3: Stage3CompetitiveAnalysis;
+      stage4: Stage4AvatarCreation;
+    }>();
+
+    const prompt = buildStage5OfferDesignPrompt(context, stage1, stage2, stage3, stage4);
+    const result: Stage5OfferDesign = await callAIStage(
+      c,
       "Offer Design",
       5,
-      stage5Prompt,
+      prompt,
       2500,
       CREATIVE_MODEL
     );
 
-    // Compile complete research data
-    const completeData: CompleteResearchData = {
-      stage1_market_analysis: stage1,
-      stage2_buyer_psychology: stage2,
-      stage3_competitive_analysis: stage3,
-      stage4_avatar_creation: stage4,
-      stage5_offer_design: stage5,
-    };
-
-    const totalTime = Math.round((Date.now() - overallStart) / 1000);
-    console.log('🎉 All Research Stages Complete', {
-      totalTimeSeconds: totalTime,
-      totalTimeMinutes: (totalTime / 60).toFixed(1),
-      stagesCompleted: 5,
-      modelsUsed: {
-        research: RESEARCH_MODEL + ' (Stages 1-3)',
-        creative: CREATIVE_MODEL + ' (Stages 4-5)'
-      }
-    });
-
-    // Return the complete research data (Stage 6 synthesis happens in separate endpoint)
-    return c.json(completeData);
-
+    return c.json(result);
   } catch (error) {
-    console.error('❌ Error in multi-stage research:', error);
+    console.error('❌ Stage 5 error:', error);
     return c.json({
-      error: 'Multi-stage research generation failed',
+      error: 'Stage 5 failed',
       message: error instanceof Error ? error.message : String(error),
-      stage: 'unknown',
     }, 500);
   }
 });
