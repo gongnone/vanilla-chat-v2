@@ -386,6 +386,7 @@ async function callAIStage<T>(
           messages,
           max_tokens: maxTokens,
           stream: false, // CRITICAL: Must be false for JSON responses
+          response_format: { type: "json_object" }, // Enable JSON mode for structured output
         }
       );
 
