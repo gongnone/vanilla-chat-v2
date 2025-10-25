@@ -300,6 +300,16 @@ For rapid testing without filling the 18-field form manually:
 
 Test data features realistic executive coaching business context (Ashley Shaw Consulting - women in tech leadership).
 
+## Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** (this file) - Main development guide
+- **[RESEARCH-GENERATOR.md](RESEARCH-GENERATOR.md)** - Market Intelligence Generator feature documentation
+- **[MULTI-STAGE-IMPLEMENTATION.md](MULTI-STAGE-IMPLEMENTATION.md)** - Multi-stage research technical implementation
+- **[cloudflare-best-practices.md](cloudflare-best-practices.md)** - Cloudflare Workers AI best practices
+- **[TESTING.md](TESTING.md)** - Testing procedures and Playwright MCP setup
+- **[docs/](docs/)** - Technical documentation, changelogs, and bug fix records
+  - **[docs/STAGE6-BUGFIX-CHANGELOG.md](docs/STAGE6-BUGFIX-CHANGELOG.md)** - Stage 6 synthesis bug fixes (Oct 2025)
+
 ## Testing with Playwright MCP
 
 This project has Playwright MCP server installed for automated browser testing and E2E testing of the chat interface. READ THE TESTING.md FILE FOR DETAILED INSTRUCTIONS. Always use the Playwright MCP to test the UI functionality.
