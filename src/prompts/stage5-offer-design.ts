@@ -137,7 +137,7 @@ Provide:
 - **offer_configuration**: Which tier to promote and which bonuses to emphasize
 - **launch_timeline**: Specific timeline (e.g., "Launch Tuesday 8am EST, run for 5 days, close Sunday 11:59pm")
 
-**Based on**: ${stage4.buying_triggers.optimal_contact_days.join(', ')} at ${stage4.buying_triggers.optimal_contact_times.join(' or ')}
+**Based on**: ${stage4.optimal_contact_days} at ${stage4.optimal_contact_times}
 
 # OUTPUT FORMAT
 
