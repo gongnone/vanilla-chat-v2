@@ -190,6 +190,36 @@ The code in `src/index.tsx` detects missing AI binding and returns mock response
 - **tailwind.config.js**: Tailwind with custom color theme (chat-border, chat-button, etc.)
 - **tsconfig.json**: TypeScript config for Hono/JSX
 
+## Best Practices & Guidelines
+
+### Cloudflare Workers AI Best Practices
+**See**: `cloudflare-best-practices.md`
+
+This document contains comprehensive best practices for building production AI applications with Cloudflare Workers AI. Key topics include:
+
+- **Section 4.4: Managing Context Windows and Token Limits** ⚠️ **CRITICAL**
+  - Understanding the 24K token context window constraint
+  - Token budget planning and calculation formulas
+  - Avoiding `JSON.stringify()` for large data objects (can bloat prompts 5-10x)
+  - Pre-deployment testing checklist for context overflow
+  - Production monitoring for token usage and truncation
+
+**Why This Matters**: The most common production failure in AI apps is context window overflow, where large input prompts leave insufficient room for quality output. This causes:
+- Silent truncation (responses cut off mid-sentence)
+- Incomplete reports or content
+- Poor user experience
+
+**Key Takeaway**: Always calculate token budgets BEFORE implementation:
+```typescript
+const estimatedInputTokens = Math.ceil(promptString.length / 3.5);
+const maxOutputTokens = Math.max(
+  MIN_REQUIRED,
+  Math.min(DESIRED, CONTEXT_WINDOW - estimatedInputTokens - BUFFER)
+);
+```
+
+Use inline value extraction instead of `JSON.stringify()` to reduce prompt size by 70-80%.
+
 ## Important Constraints
 
 ### DO NOT Convert to Workers
