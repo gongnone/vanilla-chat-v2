@@ -1,0 +1,343 @@
+import { BusinessContext } from "../types";
+import { CompleteResearchData } from "../types/research-stages";
+
+/**
+ * Condensed Stage 6 prompt that uses direct inline values instead of JSON blobs
+ * to stay within 24K token context window.
+ *
+ * FIXED: Corrected all property access patterns to match actual JSON structure from Stages 1-5
+ * Reduces input from ~15K-20K tokens to ~3K-5K tokens, allowing 18K-20K for output.
+ */
+export function buildStage6ReportSynthesisPromptCondensed(
+  context: BusinessContext,
+  researchData: CompleteResearchData
+): string {
+  const { business_name } = context;
+  const s1 = researchData.stage1_market_analysis;
+  const s2 = researchData.stage2_buyer_psychology;
+  const s3 = researchData.stage3_competitive_analysis;
+  const s4 = researchData.stage4_avatar_creation;
+  const s5 = researchData.stage5_offer_design;
+
+  // Defensive checks - ensure all required arrays exist
+  if (!s1 || !s2 || !s3 || !s4 || !s5) {
+    throw new Error('Missing required stage data');
+  }
+
+  // Ensure all arrays are defined (fallback to empty arrays)
+  const buyerLanguage = s2.buyer_language || [];
+  const topFears = s2.top_fears || [];
+  const topDesires = s2.top_desires || [];
+  const topPainPoints = s2.top_pain_points || [];
+  const barriers = s2.barriers || [];
+  const competitors = s3.competitors || [];
+  const onlineCommunities = s4.online_communities || [];
+  const pricingTiers = s5.pricing_tiers || [];
+  const paymentPlans = s5.payment_plans || [];
+  const marketingMessages = s5.marketing_messages || [];
+  const bonuses = s5.bonuses || [];
+
+  // Helper: Filter marketing messages by type
+  const painMessages = marketingMessages.filter(m => m.type === 'pain-based');
+  const desireMessages = marketingMessages.filter(m => m.type === 'desire-based');
+  const curiosityMessages = marketingMessages.filter(m => m.type === 'curiosity');
+
+  return `You are a professional market intelligence report writer. Create a comprehensive Market Intelligence Report for ${business_name} using the research data below.
+
+# RESEARCH DATA SUMMARY
+
+## Market Analysis
+- Market Size 2024: ${s1.market_size_2024}
+- Market Size 2025: ${s1.market_size_2025_projected}
+- Growth Rate: ${s1.market_growth_rate}
+- Bleeding Neck Problem: ${s1.bleeding_neck_problem}
+- Avg Household Income: ${s1.purchasing_power.average_household_income}
+- Discretionary Spending: ${s1.purchasing_power.discretionary_spending}
+- Platform Fit: ${s1.targetability.platform_fit}
+- Difficulty Score: ${s1.targetability.difficulty_score}/10
+- Targeting Interests: ${s1.targetability.targeting_interests.join(', ')}
+- Targeting Behaviors: ${s1.targetability.targeting_behaviors.join(', ')}
+
+Top 20% Profile:
+- Demographics: ${s1.top_20_percent.demographics}
+- Psychographics: ${s1.top_20_percent.psychographics}
+- Characteristics: ${s1.top_20_percent.characteristics}
+
+Power 4% Profile:
+- Demographics: ${s1.power_4_percent.demographics}
+- Psychographics: ${s1.power_4_percent.psychographics}
+- Buying Frequency: ${s1.power_4_percent.buying_frequency}
+- Lifetime Value: ${s1.power_4_percent.lifetime_value}
+- Differentiation: ${s1.power_4_percent.differentiation}
+
+## Buyer Psychology
+Buyer Phrases (${buyerLanguage.length} total): ${buyerLanguage.map(p => p.exact_phrase).join(' | ')}
+Phrase Emotions: ${buyerLanguage.map(p => p.emotional_tone).join(', ')}
+Phrase Applications: ${buyerLanguage.map(p => `"${p.exact_phrase}" → ${p.marketing_application}`).join(' || ')}
+
+Top ${topFears.length} Fears:
+${topFears.map((f, i) => `${i + 1}. ${f.name} (${f.intensity}/10) - Root: ${f.root_emotion}
+   Quote: "${f.quote}"
+   Blocker: ${f.purchase_blocker}
+   Solution: ${f.how_offer_addresses}`).join('\n')}
+
+Top ${topDesires.length} Desires:
+${topDesires.map((d, i) => `${i + 1}. ${d.name} (${d.intensity}/10) - Meaning: ${d.deeper_meaning}
+   Quote: "${d.aspirational_quote}"
+   Timeline: ${d.timeline_expectation}
+   Willingness to Pay: ${d.willingness_to_pay}
+   How Delivered: ${d.how_business_delivers}`).join('\n')}
+
+Top ${topPainPoints.length} Pain Points:
+${topPainPoints.map((p, i) => `${i + 1}. ${p.frustration} (Root: ${p.root_emotion})
+   Quote: "${p.quote}"
+   What They've Tried: ${p.what_theyve_tried}
+   Why It Failed: ${p.why_it_didnt_work}
+   How We Solve: ${p.how_unique_mechanism_solves}`).join('\n')}
+
+Barriers (${barriers.length} total):
+${barriers.map(b => `- [${b.type.toUpperCase()}] ${b.barrier}
+  Objection Handling: ${b.objection_handling_script}`).join('\n')}
+
+Price Justification: ${s2.price_justification}
+
+## Competitive Analysis
+Competitors (${competitors.length} total):
+${competitors.map(c => `- ${c.name} at ${c.price_point}
+  Positioning: ${c.positioning}
+  Target: ${c.target_audience}
+  Strengths: ${c.strengths}
+  Weaknesses: ${c.weaknesses}`).join('\n')}
+
+Positioning Gaps: ${s3.positioning_gaps.join(' | ')}
+Differentiation Opportunities: ${s3.differentiation_opportunities.join(' | ')}
+Unique Value Proposition: ${s3.unique_value_proposition}
+Competitive Pricing Analysis: ${s3.competitive_pricing_analysis}
+Why This Business Wins: ${s3.why_business_wins}
+
+## Dream Customer Avatar
+Name: ${s4.avatar_name}
+
+Demographics:
+- Age: ${s4.demographics.age_range}
+- Income: ${s4.demographics.household_income}
+- Location: ${s4.demographics.geographic_location}
+- Profession: ${s4.demographics.profession_industry}
+- Family: ${s4.demographics.family_status}
+- Education: ${s4.demographics.education}
+
+Psychographics:
+- Core Values: ${s4.psychographics.core_values.join(', ')}
+- Beliefs: ${s4.psychographics.beliefs_about_niche}
+- Lifestyle: ${s4.psychographics.daily_lifestyle}
+- Media Consumption: ${s4.psychographics.media_consumption.join(', ')}
+
+Day in Life:
+- Morning: ${s4.day_in_life.morning_routine}
+- Workday: ${s4.day_in_life.workday_experience}
+- Evening: ${s4.day_in_life.evening_routine}
+- Weekend: ${s4.day_in_life.weekend_routine}
+- Pain Moments: ${s4.day_in_life.pain_point_moments.join(' | ')}
+
+Buying Intelligence:
+- Contact Days: ${s4.buying_triggers.optimal_contact_days.join(', ')}
+- Contact Times: ${s4.buying_triggers.optimal_contact_times.join(', ')}
+- Decision Windows: ${s4.buying_triggers.decision_making_windows}
+- Platform Preferences: ${s4.buying_triggers.platform_preferences.join(', ')}
+- Content Preferences: ${s4.buying_triggers.content_format_preferences.join(', ')}
+
+Online Communities (${onlineCommunities.length} total):
+${onlineCommunities.map(c => `- ${c.name} (${c.platform}) - ${c.member_count} members, ${c.engagement_level} engagement
+  Trust: ${c.trust_factor}
+  Tone: ${c.tone_and_norms}
+  Topics: ${c.top_topics.join(', ')}
+  Ad Opportunity: ${c.advertising_opportunity}`).join('\n')}
+
+Avatar Summary:
+- Top 3 Hopes: ${s4.top_3_hopes.join(' | ')}
+- Top 3 Fears: ${s4.top_3_fears.join(' | ')}
+- Top 3 Barriers: ${s4.top_3_barriers.map(b => `${b.barrier} → Solution: ${b.solution}`).join(' | ')}
+- Recommended Tone: ${s4.recommended_tone}
+- Price Sensitivity: ${s4.price_sensitivity} (${s4.price_sensitivity_justification})
+
+## Offer Design
+Core Offer: ${s5.core_offer.offer_name}
+Target Outcome: ${s5.core_offer.target_outcome}
+Pain Points Solved: ${s5.core_offer.pain_points_solved.join(' | ')}
+Desires Delivered: ${s5.core_offer.desires_delivered.join(' | ')}
+Unique Positioning: ${s5.core_offer.unique_positioning}
+
+3-Tier Pricing Model:
+${pricingTiers.map((tier, i) => `${i + 1}. ${tier.tier_name} - ${tier.price}${tier.is_recommended ? ' ⭐ RECOMMENDED' : ''}
+   Best For: ${tier.best_for}
+   Deliverables: ${tier.deliverables.join(', ')}`).join('\n')}
+
+Payment Plans (${paymentPlans.length} options):
+${paymentPlans.map(p => `- ${p.name}: ${p.structure} (Total: ${p.total_cost})`).join('\n')}
+
+Marketing Messages (${marketingMessages.length} total - use these exact phrases):
+PAIN-BASED (${painMessages.length}): ${painMessages.map(m => m.headline).join(' | ')}
+DESIRE-BASED (${desireMessages.length}): ${desireMessages.map(m => m.headline).join(' | ')}
+CURIOSITY (${curiosityMessages.length}): ${curiosityMessages.map(m => m.headline).join(' | ')}
+
+Guarantee:
+${s5.guarantee.guarantee_text}
+Why It Works: ${s5.guarantee.why_it_works}
+
+Irresistible Bonuses (${bonuses.length} total):
+${bonuses.map(b => {
+  const value = b.value.startsWith('$') ? b.value : `$${b.value}`;
+  return `- ${b.name} (${value} value)
+  Addresses Desire: ${b.addresses_desire}
+  Speeds Results: ${b.how_it_speeds_results}`;
+}).join('\n')}
+
+First Campaign Recommendation:
+- Platform: ${s5.first_campaign.platform}
+- Lead Message: ${s5.first_campaign.message}
+- Offer Configuration: ${s5.first_campaign.offer_configuration}
+- Launch Timeline: ${s5.first_campaign.launch_timeline}
+
+# YOUR TASK
+
+Create a comprehensive 5,000-6,000 word Market Intelligence Report in markdown format using ALL the data above.
+
+## Required Structure
+
+# Market Intelligence Report: ${business_name}
+
+## Executive Summary
+[300-400 words covering market opportunity, Power 4% profile, key buyer insights, competitive positioning, recommended offer, and first campaign]
+
+## 1. Market Validation & Opportunity
+### Market Growth & Size
+[Use exact numbers from data]
+
+### Bleeding Neck Problem
+[Explain in detail]
+
+### Purchasing Power Analysis
+[Income and spending data]
+
+### Targetability Assessment
+[Platform fit, difficulty score, targeting options]
+
+## 2. Customer Segmentation
+### Top 20% Customer Profile
+[Demographics, psychographics, characteristics]
+
+### Power 4% Dream Customer Profile
+[Detailed profile with buying behavior and lifetime value]
+
+## 3. Buyer Psychology Deep-Dive
+### Buyer Language Intelligence
+[Create table with ALL ${buyerLanguage.length} buyer phrases, emotions, and marketing applications]
+
+### Fear Analysis
+[Detail ALL ${topFears.length} fears with intensity, quotes, root emotions, purchase blockers, and solutions]
+
+### Desire Analysis
+[Detail ALL ${topDesires.length} desires with intensity, deeper meanings, timelines, willingness to pay]
+
+### Major Pain Points
+[All ${topPainPoints.length} pain points with quotes, what they've tried, why it failed, and how you solve]
+
+### Barriers to Purchase
+[Internal and external barriers with objection handling scripts]
+
+### Price Justification
+[Full justification from data]
+
+## 4. Competitive Intelligence
+### Competitor Matrix
+[Table with ALL ${competitors.length} competitors, prices, positioning, strengths/weaknesses, target audience]
+
+### Positioning Gap Analysis
+[All positioning gaps as bullets]
+
+### Differentiation Opportunities
+[All differentiation opportunities as bullets]
+
+### Unique Value Proposition
+[Full UVP]
+
+### Why This Business Wins
+[All reasons from competitive analysis]
+
+## 5. Dream Customer Avatar: ${s4.avatar_name}
+### Demographics Profile
+[Complete profile with all 6 demographic attributes]
+
+### Psychographic Profile
+[Values, beliefs, lifestyle, media consumption]
+
+### A Day in the Life
+[Morning, workday, evening, weekend routines with specific pain moments]
+
+### Buying Triggers & Optimal Contact
+[Optimal days, times, decision windows, platform preferences, content format preferences]
+
+### Online Community Intelligence
+[ALL ${onlineCommunities.length} communities with platform, member count, engagement, trust, tone, topics, ad opportunities]
+
+### Avatar Summary
+[Top 3 hopes, top 3 fears, top 3 barriers with solutions, recommended tone, price sensitivity]
+
+## 6. Offer Design & Pricing Strategy
+### Core Offer: ${s5.core_offer.offer_name}
+[Target outcome, pain points solved, desires delivered, unique positioning]
+
+### 3-Tier Pricing Model
+[Detail each of the 3 tiers with exact prices, best for, ALL deliverables, mark the recommended tier]
+
+### Payment Plan Options
+[Table with ALL ${paymentPlans.length} payment plans]
+
+### Marketing Messages
+[Organize ALL ${marketingMessages.length} messages by type: ${painMessages.length} pain-based, ${desireMessages.length} desire-based, ${curiosityMessages.length} curiosity-based. Include usage context for each.]
+
+### Risk-Reversal Guarantee
+[Full guarantee text and explanation of why it works]
+
+### Irresistible Bonuses
+[ALL ${bonuses.length} bonuses with dollar values, desires addressed, and how they speed results]
+
+## 7. First Campaign Strategy
+[Platform, lead message, offer configuration, launch timeline - all from first_campaign data]
+
+## 8. Strategic Recommendations & Next Steps
+### Immediate Actions (Week 1-2)
+[5 specific actions based on the research]
+
+### Short-Term Strategy (Month 1-3)
+[3 strategic initiatives]
+
+### Long-Term Vision (Month 4-12)
+[3 vision items]
+
+### Success Metrics to Track
+[4-5 key metrics specific to this business]
+
+## Appendix: Research Methodology
+[Brief explanation of 6-stage research process used to generate this report]
+
+---
+
+**Generated:** ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+**For:** ${business_name}
+
+# CRITICAL REQUIREMENTS
+
+✅ USE ALL DATA - Every piece of research data must appear in the report
+✅ NO PLACEHOLDERS - Use actual names, numbers, quotes from the data
+✅ EXACT QUOTES - Use the exact buyer phrases and quotes provided (${buyerLanguage.length} phrases, ${topFears.length} fear quotes, ${topDesires.length} desire quotes, ${topPainPoints.length} pain point quotes)
+✅ COMPLETE TABLES - Fill every row with real data (${competitors.length} competitors, ${onlineCommunities.length} communities, ${pricingTiers.length} pricing tiers, ${paymentPlans.length} payment plans)
+✅ SPECIFIC NUMBERS - Use exact dollar amounts, percentages, dates
+✅ ALL MARKETING MESSAGES - Include all ${marketingMessages.length} marketing messages (${painMessages.length} pain + ${desireMessages.length} desire + ${curiosityMessages.length} curiosity)
+✅ ALL BONUSES - Include all ${bonuses.length} bonuses with values and benefits
+✅ PROFESSIONAL MARKDOWN - Proper headers, tables, bold, lists
+✅ 5,000-6,000 WORDS - Comprehensive and actionable
+✅ CLIENT-READY - They should be able to use this immediately
+
+Return ONLY the complete markdown report. Start with the heading "# Market Intelligence Report: ${business_name}".`;
+}

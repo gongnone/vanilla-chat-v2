@@ -640,8 +640,8 @@ app.post("/api/research/synthesize", async (c) => {
       { role: "user", content: stage6Prompt }
     ];
 
-    // Use creative model for final synthesis (long-form writing) - Try 3.3 for stability
-    const SYNTHESIS_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+    // Use same model as Stages 1-5 for consistency and compatibility
+    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
 
     // More accurate token estimation: ~1 token per 3.5 characters for condensed prompts
     const estimatedInputTokens = Math.ceil(stage6Prompt.length / 3.5);

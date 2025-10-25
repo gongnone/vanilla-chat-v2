@@ -5,6 +5,7 @@ import { CompleteResearchData } from "../types/research-stages";
  * Condensed Stage 6 prompt that uses direct inline values instead of JSON blobs
  * to stay within 24K token context window.
  *
+ * FIXED: Corrected all property access patterns to match actual JSON structure from Stages 1-5
  * Reduces input from ~15K-20K tokens to ~3K-5K tokens, allowing 18K-20K for output.
  */
 export function buildStage6ReportSynthesisPromptCondensed(
@@ -12,11 +13,19 @@ export function buildStage6ReportSynthesisPromptCondensed(
   researchData: CompleteResearchData
 ): string {
   const { business_name } = context;
-  const s1 = researchData.stage1_market_analysis;
-  const s2 = researchData.stage2_buyer_psychology;
-  const s3 = researchData.stage3_competitive_analysis;
-  const s4 = researchData.stage4_avatar_creation;
-  const s5 = researchData.stage5_offer_design;
+
+  // Cast to 'any' because actual runtime data is FLAT structure
+  // Stages 2-5 prompts explicitly request flat JSON, not nested objects/arrays
+  const s1 = researchData.stage1_market_analysis as any;
+  const s2 = researchData.stage2_buyer_psychology as any;
+  const s3 = researchData.stage3_competitive_analysis as any;
+  const s4 = researchData.stage4_avatar_creation as any;
+  const s5 = researchData.stage5_offer_design as any;
+
+  // Defensive checks
+  if (!s1 || !s2 || !s3 || !s4 || !s5) {
+    throw new Error('Missing required stage data');
+  }
 
   return `You are a professional market intelligence report writer. Create a comprehensive Market Intelligence Report for ${business_name} using the research data below.
 
@@ -47,109 +56,217 @@ Power 4% Profile:
 - Differentiation: ${s1.power_4_percent.differentiation}
 
 ## Buyer Psychology
-Buyer Phrases: ${s2.buyer_phrases.join(' | ')}
-Phrase Emotions: ${s2.phrase_emotions.join(', ')}
+Buyer Phrases: ${(s2.buyer_phrases || []).join(' | ')}
+Phrase Emotions: ${(s2.phrase_emotions || []).join(', ')}
+Phrase Marketing Hooks: ${(s2.phrase_marketing_hooks || []).join(' | ')}
 
 Top 3 Fears:
-1. ${s2.fear_1} (${s2.fear_1_intensity}/10) - Root: ${s2.fear_1_root_emotion}
-2. ${s2.fear_2} (${s2.fear_2_intensity}/10) - Root: ${s2.fear_2_root_emotion}
-3. ${s2.fear_3} (${s2.fear_3_intensity}/10) - Root: ${s2.fear_3_root_emotion}
+1. ${s2.fear_1 || 'Not specified'} (${s2.fear_1_intensity || 'N/A'}/10)
+   Root Emotion: ${s2.fear_1_root_emotion || 'Not specified'}
+
+2. ${s2.fear_2 || 'Not specified'} (${s2.fear_2_intensity || 'N/A'}/10)
+   Root Emotion: ${s2.fear_2_root_emotion || 'Not specified'}
+
+3. ${s2.fear_3 || 'Not specified'} (${s2.fear_3_intensity || 'N/A'}/10)
+   Root Emotion: ${s2.fear_3_root_emotion || 'Not specified'}
 
 Top 3 Desires:
-1. ${s2.desire_1} (${s2.desire_1_intensity}/10) - Meaning: ${s2.desire_1_deeper_meaning}
-2. ${s2.desire_2} (${s2.desire_2_intensity}/10) - Meaning: ${s2.desire_2_deeper_meaning}
-3. ${s2.desire_3} (${s2.desire_3_intensity}/10) - Meaning: ${s2.desire_3_deeper_meaning}
+1. ${s2.desire_1 || 'Not specified'} (${s2.desire_1_intensity || 'N/A'}/10)
+   Deeper Meaning: ${s2.desire_1_deeper_meaning || 'Not specified'}
+
+2. ${s2.desire_2 || 'Not specified'} (${s2.desire_2_intensity || 'N/A'}/10)
+   Deeper Meaning: ${s2.desire_2_deeper_meaning || 'Not specified'}
+
+3. ${s2.desire_3 || 'Not specified'} (${s2.desire_3_intensity || 'N/A'}/10)
+   Deeper Meaning: ${s2.desire_3_deeper_meaning || 'Not specified'}
 
 Top 3 Pain Points:
-1. ${s2.pain_point_1} - Quote: "${s2.pain_point_1_quote}"
-2. ${s2.pain_point_2} - Quote: "${s2.pain_point_2_quote}"
-3. ${s2.pain_point_3} - Quote: "${s2.pain_point_3_quote}"
+1. ${s2.pain_point_1 || 'Not specified'}
+   Quote: "${s2.pain_point_1_quote || 'Not specified'}"
+
+2. ${s2.pain_point_2 || 'Not specified'}
+   Quote: "${s2.pain_point_2_quote || 'Not specified'}"
+
+3. ${s2.pain_point_3 || 'Not specified'}
+   Quote: "${s2.pain_point_3_quote || 'Not specified'}"
 
 Barriers:
-- Internal: ${s2.internal_barriers}
-- External: ${s2.external_barriers}
+- Internal: ${s2.internal_barriers || 'Not specified'}
+- External: ${s2.external_barriers || 'Not specified'}
+- Objection Handling: ${s2.objection_handling_summary || 'Not specified'}
 
-Objection Handling: ${s2.objection_handling_summary}
-Price Justification: ${s2.price_justification}
+Price Justification: ${s2.price_justification || 'Not specified'}
 
 ## Competitive Analysis
-Competitors: ${s3.competitors.map(c => `${c.name} ($${c.price}) - ${c.positioning}`).join(' | ')}
-Positioning Gaps: ${s3.positioning_gaps.join(' | ')}
-Differentiation: ${s3.differentiation_opportunities.join(' | ')}
-UVP: ${s3.unique_value_proposition}
-Pricing Landscape: ${s3.competitive_pricing_landscape}
-Why We Win: ${s3.why_this_business_wins.join(' | ')}
+Competitors (3 analyzed):
+1. ${s3.competitor_1_name || 'Not specified'} at ${s3.competitor_1_price || 'N/A'}
+   Positioning: ${s3.competitor_1_positioning || 'Not specified'}
+   Target: ${s3.competitor_1_target || 'Not specified'}
+   Strengths: ${s3.competitor_1_strengths || 'Not specified'}
+   Weaknesses: ${s3.competitor_1_weaknesses || 'Not specified'}
+
+2. ${s3.competitor_2_name || 'Not specified'} at ${s3.competitor_2_price || 'N/A'}
+   Positioning: ${s3.competitor_2_positioning || 'Not specified'}
+   Target: ${s3.competitor_2_target || 'Not specified'}
+   Strengths: ${s3.competitor_2_strengths || 'Not specified'}
+   Weaknesses: ${s3.competitor_2_weaknesses || 'Not specified'}
+
+3. ${s3.competitor_3_name || 'Not specified'} at ${s3.competitor_3_price || 'N/A'}
+   Positioning: ${s3.competitor_3_positioning || 'Not specified'}
+   Target: ${s3.competitor_3_target || 'Not specified'}
+   Strengths: ${s3.competitor_3_strengths || 'Not specified'}
+   Weaknesses: ${s3.competitor_3_weaknesses || 'Not specified'}
+
+Positioning Gaps (5 identified):
+1. ${s3.gap_1 || 'Not specified'}
+2. ${s3.gap_2 || 'Not specified'}
+3. ${s3.gap_3 || 'Not specified'}
+4. ${s3.gap_4 || 'Not specified'}
+5. ${s3.gap_5 || 'Not specified'}
+
+Differentiation Opportunities (5 identified):
+1. ${s3.diff_1 || 'Not specified'}
+2. ${s3.diff_2 || 'Not specified'}
+3. ${s3.diff_3 || 'Not specified'}
+4. ${s3.diff_4 || 'Not specified'}
+5. ${s3.diff_5 || 'Not specified'}
+
+Unique Value Proposition: ${s3.unique_value_proposition || 'Not specified'}
+Pricing Analysis: ${s3.pricing_analysis || 'Not specified'}
+
+Why This Business Wins (5 reasons):
+1. ${s3.win_reason_1 || 'Not specified'}
+2. ${s3.win_reason_2 || 'Not specified'}
+3. ${s3.win_reason_3 || 'Not specified'}
+4. ${s3.win_reason_4 || 'Not specified'}
+5. ${s3.win_reason_5 || 'Not specified'}
 
 ## Dream Customer Avatar
-Name: ${s4.avatar_name}
-Age: ${s4.age_range}
-Income: ${s4.household_income}
-Location: ${s4.location}
-Job Title: ${s4.job_title}
-Industry: ${s4.industry}
-Years Experience: ${s4.years_in_career}
+Name: ${s4.avatar_name || 'Not specified'}
+
+Demographics:
+- Age: ${s4.age || 'Not specified'}
+- Income: ${s4.household_income || 'Not specified'}
+- Location: ${s4.location || 'Not specified'}
+- Profession: ${s4.profession || 'Not specified'}
+- Family: ${s4.family || 'Not specified'}
+- Education: ${s4.education || 'Not specified'}
 
 Psychographics:
-- Values: ${s4.core_values.join(', ')}
-- Beliefs: ${s4.beliefs_about_niche}
-- Lifestyle: ${s4.daily_lifestyle}
-- Media: ${s4.media_consumption.join(', ')}
+- Core Values: ${s4.core_values || 'Not specified'}
+- Beliefs: ${s4.beliefs_about_niche || 'Not specified'}
+- Lifestyle: ${s4.daily_lifestyle || 'Not specified'}
+- Media Consumption: ${s4.media_consumption || 'Not specified'}
 
 Day in Life:
-- Morning: ${s4.morning_routine}
-- Workday: ${s4.workday_experience}
-- Evening: ${s4.evening_routine}
-- Weekend: ${s4.weekend_routine}
-- Pain Moments: ${s4.pain_point_moments.join(' | ')}
+${s4.typical_day_summary || 'Not specified'}
+
+Pain Moments:
+1. ${s4.pain_moment_1 || 'Not specified'}
+2. ${s4.pain_moment_2 || 'Not specified'}
+3. ${s4.pain_moment_3 || 'Not specified'}
+4. ${s4.pain_moment_4 || 'Not specified'}
+5. ${s4.pain_moment_5 || 'Not specified'}
 
 Buying Intelligence:
-- Contact Days: ${s4.optimal_contact_days}
-- Contact Times: ${s4.optimal_contact_times}
-- Decision Windows: ${s4.decision_making_windows}
-- Platform Prefs: ${s4.platform_preferences}
-- Content Prefs: ${s4.content_format_preferences}
+- Optimal Contact Days/Times: ${s4.optimal_contact_days || 'Not specified'} at ${s4.optimal_contact_times || 'Not specified'}
+- Decision Windows: ${s4.decision_windows || 'Not specified'}
+- Platform Preferences: ${s4.platforms || 'Not specified'}
+- Content Preferences: ${s4.content_preferences || 'Not specified'}
 
-Communities: ${s4.online_communities.map(c => `${c.name} (${c.platform}) - ${c.member_count} members`).join(' | ')}
+Online Communities (3 analyzed):
+1. ${s4.community_1_name || 'Not specified'} (${s4.community_1_platform || 'N/A'})
+   Members: ${s4.community_1_members || 'N/A'}, Engagement: ${s4.community_1_engagement || 'N/A'}
+   Topics: ${s4.community_1_topics || 'Not specified'}
+   Approach: ${s4.community_1_approach || 'Not specified'}
+
+2. ${s4.community_2_name || 'Not specified'} (${s4.community_2_platform || 'N/A'})
+   Members: ${s4.community_2_members || 'N/A'}, Engagement: ${s4.community_2_engagement || 'N/A'}
+   Topics: ${s4.community_2_topics || 'Not specified'}
+   Approach: ${s4.community_2_approach || 'Not specified'}
+
+3. ${s4.community_3_name || 'Not specified'} (${s4.community_3_platform || 'N/A'})
+   Members: ${s4.community_3_members || 'N/A'}, Engagement: ${s4.community_3_engagement || 'N/A'}
+   Topics: ${s4.community_3_topics || 'Not specified'}
+   Approach: ${s4.community_3_approach || 'Not specified'}
 
 Avatar Summary:
-- Top Hopes: ${s4.top_3_hopes.join(' | ')}
-- Top Fears: ${s4.top_3_fears.join(' | ')}
-- Barriers: ${s4.top_3_barriers_to_buying.join(' | ')}
-- Tone: ${s4.recommended_tone}
-- Price Sensitivity: ${s4.price_sensitivity}
+- Top 3 Hopes:
+  1. ${s4.hope_1 || 'Not specified'}
+  2. ${s4.hope_2 || 'Not specified'}
+  3. ${s4.hope_3 || 'Not specified'}
+
+- Top 3 Fears:
+  1. ${s4.fear_1 || 'Not specified'}
+  2. ${s4.fear_2 || 'Not specified'}
+  3. ${s4.fear_3 || 'Not specified'}
+
+- Top 3 Barriers:
+  1. ${s4.barrier_1 || 'Not specified'} → Solution: ${s4.barrier_1_solution || 'Not specified'}
+  2. ${s4.barrier_2 || 'Not specified'} → Solution: ${s4.barrier_2_solution || 'Not specified'}
+  3. ${s4.barrier_3 || 'Not specified'} → Solution: ${s4.barrier_3_solution || 'Not specified'}
+
+- Recommended Tone: ${s4.recommended_tone || 'Not specified'}
+- Price Sensitivity: ${s4.price_sensitivity || 'Not specified'} (${s4.price_sensitivity_reason || 'Not specified'})
 
 ## Offer Design
-Core Offer: ${s5.core_offer_name}
-Target Outcome: ${s5.target_outcome}
-Pain Points Solved: ${s5.pain_points_solved.join(' | ')}
-Desires Delivered: ${s5.desires_delivered.join(' | ')}
-Unique Positioning: ${s5.unique_positioning}
+Core Offer: ${s5.offer_name || 'Not specified'}
+Target Outcome: ${s5.offer_outcome || 'Not specified'}
+Unique Positioning: ${s5.offer_positioning || 'Not specified'}
 
-3 Tiers:
-1. ${s5.tier_1_name} - $${s5.tier_1_price} - ${s5.tier_1_best_for}
-   Deliverables: ${s5.tier_1_deliverables.join(', ')}
-2. ${s5.tier_2_name} - $${s5.tier_2_price} - ${s5.tier_2_best_for} ⭐ RECOMMENDED
-   Deliverables: ${s5.tier_2_deliverables.join(', ')}
-3. ${s5.tier_3_name} - $${s5.tier_3_price} - ${s5.tier_3_best_for}
-   Deliverables: ${s5.tier_3_deliverables.join(', ')}
+3-Tier Pricing Model:
+1. ${s5.tier_1_name || 'Tier 1'} - ${s5.tier_1_price || 'Not specified'}
+   Best For: ${s5.tier_1_best_for || 'Not specified'}
+   Deliverables: ${s5.tier_1_deliverables || 'Not specified'}
 
-Payment Plans: ${s5.payment_plans.map(p => `${p.name}: ${p.structure} (${p.total_cost})`).join(' | ')}
+2. ${s5.tier_2_name || 'Tier 2'} - ${s5.tier_2_price || 'Not specified'} ⭐ RECOMMENDED
+   Best For: ${s5.tier_2_best_for || 'Not specified'}
+   Deliverables: ${s5.tier_2_deliverables || 'Not specified'}
+
+3. ${s5.tier_3_name || 'Tier 3'} - ${s5.tier_3_price || 'Not specified'}
+   Best For: ${s5.tier_3_best_for || 'Not specified'}
+   Deliverables: ${s5.tier_3_deliverables || 'Not specified'}
+
+Payment Plans (3 options):
+1. ${s5.payment_plan_1 || 'Not specified'}
+2. ${s5.payment_plan_2 || 'Not specified'}
+3. ${s5.payment_plan_3 || 'Not specified'}
 
 Marketing Messages (use these exact phrases):
-Pain: ${s5.pain_based_messages.map(m => m.headline).join(' | ')}
-Desire: ${s5.desire_based_messages.map(m => m.headline).join(' | ')}
-Curiosity: ${s5.curiosity_based_messages.map(m => m.headline).join(' | ')}
+PAIN-BASED (3 messages):
+1. ${s5.pain_message_1 || 'Not specified'}
+2. ${s5.pain_message_2 || 'Not specified'}
+3. ${s5.pain_message_3 || 'Not specified'}
 
-Guarantee: ${s5.guarantee_text}
-Why It Works: ${s5.guarantee_explanation}
+DESIRE-BASED (3 messages):
+1. ${s5.desire_message_1 || 'Not specified'}
+2. ${s5.desire_message_2 || 'Not specified'}
+3. ${s5.desire_message_3 || 'Not specified'}
 
-Bonuses: ${s5.bonuses.map(b => `${b.name} ($${b.value}) - ${b.how_it_speeds_results}`).join(' | ')}
+CURIOSITY (3 messages):
+1. ${s5.curiosity_message_1 || 'Not specified'}
+2. ${s5.curiosity_message_2 || 'Not specified'}
+3. ${s5.curiosity_message_3 || 'Not specified'}
 
-First Campaign:
-- Platform: ${s5.first_campaign_platform}
-- Lead Message: ${s5.first_campaign_lead_message}
-- Offer: ${s5.first_campaign_offer_configuration}
-- Timeline: ${s5.first_campaign_launch_timeline}
+Guarantee:
+${s5.guarantee_text || 'Not specified'}
+Why It Works: ${s5.guarantee_why || 'Not specified'}
+
+Irresistible Bonuses (3 total):
+1. ${s5.bonus_1_name || 'Not specified'} (${s5.bonus_1_value || 'N/A'} value)
+   Benefit: ${s5.bonus_1_benefit || 'Not specified'}
+
+2. ${s5.bonus_2_name || 'Not specified'} (${s5.bonus_2_value || 'N/A'} value)
+   Benefit: ${s5.bonus_2_benefit || 'Not specified'}
+
+3. ${s5.bonus_3_name || 'Not specified'} (${s5.bonus_3_value || 'N/A'} value)
+   Benefit: ${s5.bonus_3_benefit || 'Not specified'}
+
+First Campaign Recommendation:
+- Platform: ${s5.campaign_platform || 'Not specified'}
+- Lead Message: ${s5.campaign_message || 'Not specified'}
+- Offer Configuration: ${s5.campaign_offer || 'Not specified'}
+- Launch Timeline: ${s5.campaign_timeline || 'Not specified'}
 
 # YOUR TASK
 
@@ -180,87 +297,87 @@ Create a comprehensive 5,000-6,000 word Market Intelligence Report in markdown f
 [Demographics, psychographics, characteristics]
 
 ### Power 4% Dream Customer Profile
-[Detailed profile with buying behavior]
+[Detailed profile with buying behavior and lifetime value]
 
 ## 3. Buyer Psychology Deep-Dive
 ### Buyer Language Intelligence
-[Create table with all buyer phrases, emotions, and marketing applications]
+[Create table with ALL 5 buyer phrases, 5 emotions, and 5 marketing hooks from data]
 
 ### Fear Analysis
-[Detail all 3 fears with intensity, quotes, root emotions]
+[Detail ALL 3 fears with intensity (1-10), root emotions from data above]
 
 ### Desire Analysis
-[Detail all 3 desires with intensity, deeper meanings]
+[Detail ALL 3 desires with intensity (1-10), deeper meanings from data above]
 
 ### Major Pain Points
-[All 3 pain points with quotes and solutions]
+[All 3 pain points with exact quotes from data above]
 
 ### Barriers to Purchase
-[Internal and external barriers with handling strategies]
+[Internal and external barriers with objection handling from data above]
 
 ### Price Justification
-[Full justification]
+[Full justification from data]
 
 ## 4. Competitive Intelligence
 ### Competitor Matrix
-[Table with all competitors, prices, positioning, strengths/weaknesses]
+[Table with ALL 3 competitors, prices, positioning, strengths/weaknesses, target audience]
 
 ### Positioning Gap Analysis
-[All gaps as bullets]
+[All 5 positioning gaps as bullets]
 
 ### Differentiation Opportunities
-[All opportunities as bullets]
+[All 5 differentiation opportunities as bullets]
 
 ### Unique Value Proposition
-[Full UVP]
+[Full UVP from data]
 
 ### Why This Business Wins
-[All reasons]
+[All 5 reasons from competitive analysis]
 
-## 5. Dream Customer Avatar: ${s4.avatar_name}
+## 5. Dream Customer Avatar: ${s4.avatar_name || 'Not specified'}
 ### Demographics Profile
-[Complete profile]
+[Complete profile with all 6 demographic attributes from data]
 
 ### Psychographic Profile
-[Values, beliefs, lifestyle, media consumption]
+[Values, beliefs, lifestyle, media consumption from data]
 
 ### A Day in the Life
-[Morning, workday, evening, weekend routines with pain moments]
+[Use typical day summary and 5 specific pain moments from data]
 
 ### Buying Triggers & Optimal Contact
-[Days, times, windows, platforms, content preferences]
+[Optimal days/times, decision windows, platforms, content preferences from data]
 
 ### Online Community Intelligence
-[All communities with details]
+[ALL 3 communities with platform, members, engagement, topics, approach from data]
 
 ### Avatar Summary
-[Hopes, fears, barriers, tone, price sensitivity]
+[Top 3 hopes, 3 fears, 3 barriers with solutions, recommended tone, price sensitivity from data]
 
 ## 6. Offer Design & Pricing Strategy
-### Core Offer: ${s5.core_offer_name}
-[Outcome, pain points solved, desires delivered, positioning]
+### Core Offer: ${s5.offer_name || 'Not specified'}
+[Target outcome, unique positioning from data]
 
 ### 3-Tier Pricing Model
-[Detail each tier with price, best for, all deliverables]
+[Detail each of the 3 tiers with exact prices, best for, deliverables, mark tier 2 as RECOMMENDED]
 
 ### Payment Plan Options
-[Table with all plans]
+[Table with ALL 3 payment plans from data]
 
 ### Marketing Messages
-[All pain, desire, and curiosity messages organized by use case]
+[Organize ALL 9 messages by type: 3 pain-based, 3 desire-based, 3 curiosity. Use exact messages from data.]
 
 ### Risk-Reversal Guarantee
-[Full guarantee with explanation]
+[Full guarantee text and explanation of why it works from data]
 
 ### Irresistible Bonuses
-[All bonuses with value and impact]
+[ALL 3 bonuses with dollar values and benefits from data]
 
 ## 7. First Campaign Strategy
-[Platform, lead message, offer config, timeline]
+[Platform, lead message, offer configuration, launch timeline from campaign data]
 
 ## 8. Strategic Recommendations & Next Steps
 ### Immediate Actions (Week 1-2)
-[5 specific actions]
+[5 specific actions based on the research]
 
 ### Short-Term Strategy (Month 1-3)
 [3 strategic initiatives]
@@ -269,10 +386,10 @@ Create a comprehensive 5,000-6,000 word Market Intelligence Report in markdown f
 [3 vision items]
 
 ### Success Metrics to Track
-[4-5 key metrics]
+[4-5 key metrics specific to this business]
 
 ## Appendix: Research Methodology
-[Brief explanation of 6-stage process]
+[Brief explanation of 6-stage research process used to generate this report]
 
 ---
 
@@ -282,10 +399,12 @@ Create a comprehensive 5,000-6,000 word Market Intelligence Report in markdown f
 # CRITICAL REQUIREMENTS
 
 ✅ USE ALL DATA - Every piece of research data must appear in the report
-✅ NO PLACEHOLDERS - Use actual names, numbers, quotes from the data
-✅ EXACT QUOTES - Use the exact buyer phrases and quotes provided
-✅ COMPLETE TABLES - Fill every row with real data
-✅ SPECIFIC NUMBERS - Use exact dollar amounts, percentages, dates
+✅ NO PLACEHOLDERS - Use actual names, numbers, quotes from the data above
+✅ EXACT QUOTES - Use the exact buyer phrases (5 phrases), fear quotes (3 fears), desire statements (3 desires), pain point quotes (3 pain points)
+✅ COMPLETE TABLES - Fill every row with real data (3 competitors, 3 communities, 3 pricing tiers, 3 payment plans)
+✅ SPECIFIC NUMBERS - Use exact dollar amounts, percentages, dates from data
+✅ ALL MARKETING MESSAGES - Include all 9 marketing messages (3 pain-based + 3 desire-based + 3 curiosity)
+✅ ALL BONUSES - Include all 3 bonuses with dollar values and benefits
 ✅ PROFESSIONAL MARKDOWN - Proper headers, tables, bold, lists
 ✅ 5,000-6,000 WORDS - Comprehensive and actionable
 ✅ CLIENT-READY - They should be able to use this immediately
