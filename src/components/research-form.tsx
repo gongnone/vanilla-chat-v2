@@ -393,18 +393,44 @@ export const ResearchFormPage = () => (
           <div className="p-8">
             <div id="report-content" className="prose prose-lg max-w-none"></div>
 
-            <div className="mt-8 flex gap-4">
+            {/* Next Step Banner */}
+            <div className="mt-8 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🚀</div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-purple-900 mb-2">
+                    ✅ Research Complete! Ready for Next Step?
+                  </h3>
+                  <p className="text-purple-800 mb-4">
+                    Now that you have deep market intelligence, use it to design a conversion-optimized
+                    strategic offer with pricing, bonuses, guarantees, order bumps, and upsells.
+                  </p>
+                  <button
+                    id="design-offer-btn"
+                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg font-bold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    → Design Your Strategic Offer (8-12 min)
+                  </button>
+                  <p className="text-xs text-purple-600 mt-3">
+                    💡 Your research data is automatically saved and will be used to create your offer
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Secondary Actions */}
+            <div className="mt-6 flex gap-4">
               <button
                 id="copy-btn"
-                className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
               >
-                📋 Copy to Clipboard
+                📋 Copy Report
               </button>
               <button
                 id="new-report-btn"
-                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
               >
-                ✨ Generate New Report
+                ✨ New Report
               </button>
             </div>
           </div>

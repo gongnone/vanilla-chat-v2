@@ -362,6 +362,12 @@ function setupReportButtons(fullReport) {
       location.reload();
     }
   };
+
+  // Navigate to offer design
+  document.getElementById('design-offer-btn').onclick = () => {
+    console.log('📊 Navigating to Offer Design with saved research data');
+    window.location.href = '/offer-design';
+  };
 }
 
 // Form submission - Always uses multi-stage generation
