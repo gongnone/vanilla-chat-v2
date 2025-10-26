@@ -23,9 +23,10 @@ function checkPrerequisites() {
   const notice = document.getElementById('prerequisites-notice');
 
   if (!researchData && notice) {
-    notice.classList.add('border-yellow-400', 'bg-yellow-50');
+    notice.classList.add('border-red-400', 'bg-red-50');
+    notice.querySelector('p').innerHTML = '<strong>⚠️ RESEARCH REQUIRED:</strong> You must complete market research first. <a href="/research" class="underline font-bold">Go to Research →</a>';
   } else if (notice) {
-    notice.classList.remove('border-yellow-400', 'bg-yellow-50');
+    notice.classList.remove('border-red-400', 'bg-red-50');
     notice.classList.add('border-green-400', 'bg-green-50');
     notice.querySelector('p').innerHTML = '<strong>✅ Research Loaded:</strong> Ready to generate offer design';
   }
@@ -167,18 +168,17 @@ document.getElementById('offer-design-form')?.addEventListener('submit', async (
     return;
   }
 
-  // Check for research data
+  // Check for research data - REQUIRED
   const researchDataString = localStorage.getItem('lastResearchReport');
   if (!researchDataString) {
-    const proceed = confirm(
-      'No market research found!\n\n' +
-      'For best results, complete market research first at /research.\n\n' +
-      'Generate offer anyway?'
+    alert(
+      '⚠️ MARKET RESEARCH REQUIRED\n\n' +
+      'Strategic Offer Design requires market research data to create high-quality offers.\n\n' +
+      'You will be redirected to the research page to complete this step first.\n\n' +
+      'This takes 15-20 minutes but dramatically improves offer quality.'
     );
-    if (!proceed) {
-      window.location.href = '/research';
-      return;
-    }
+    window.location.href = '/research';
+    return;
   }
 
   // Save preferences
@@ -607,6 +607,124 @@ document.getElementById('new-offer-btn')?.addEventListener('click', () => {
 // Fill test data function
 window.fillOfferTestData = function() {
   const form = document.getElementById('offer-design-form');
+
+  // IMPORTANT: Also load test research data into localStorage
+  // This matches the Ashley Shaw Consulting report from test-research-report.md
+  const testResearchData = {
+    context: {
+      business_name: "Ashley Shaw Consulting",
+      current_offer_description: "Executive coaching for women in tech leadership",
+      niche: "Leadership coaching for high-achieving women in tech",
+      specialization_keywords: "executive presence, career advancement, C-suite transitions",
+      business_stage: "growth",
+      revenue_range: "50k-100k",
+      preferred_market_category: "wealth",
+      target_market_hypothesis: "Women tech leaders aged 40-45 in VP/Senior Manager roles",
+      target_demographics: "Age 40-45, income $300K-$450K, STEM degrees",
+      target_psychographics: "Value authenticity, growth, making impact",
+      biggest_customer_pain_point: "Undervalued and overlooked for C-suite despite qualifications",
+      service_type: "coaching",
+      delivery_format: "1:1",
+      price_point_current: "$24,997",
+      offer_duration: "12 weeks",
+      unique_mechanism: "Strategic Visibility Framework"
+    },
+    researchData: {
+      stage1_market_analysis: {
+        market_growth_rate: "10.2% annually",
+        market_size_2024: "$4.2 billion",
+        market_size_2025_projected: "$4.7 billion",
+        bleeding_neck_problem: "Undervaluation, oversight, and underpromotion of women in tech leadership despite exceptional performance",
+        purchasing_power: {
+          average_household_income: "$275,000-$425,000",
+          discretionary_spending: "$10,000-$20,000 per year"
+        },
+        targetability: {
+          platform_fit: "Facebook and Instagram",
+          targeting_interests: ["women in leadership", "tech careers"],
+          targeting_behaviors: ["executives", "decision makers"],
+          difficulty_score: 8
+        },
+        top_20_percent: {
+          demographics: "Age 38-48, income $200K-$350K",
+          psychographics: "Value personal growth, leadership development",
+          characteristics: "Highly motivated, results-driven"
+        },
+        power_4_percent: {
+          demographics: "Age 40-45, income $300K-$450K, VPs/Senior Managers in tech",
+          psychographics: "Value authenticity, growth, impact",
+          buying_frequency: "Every 12-18 months",
+          lifetime_value: "$120,000-$200,000 over 5 years",
+          differentiation: "Commitment to excellence and transformation"
+        }
+      },
+      stage2_buyer_psychology: {
+        top_fears: [
+          { quote: "I'll never be taken seriously as a leader because of my gender", intensity: 9 },
+          { quote: "I'll fail as a leader and let my team down", intensity: 8 }
+        ],
+        top_desires: [
+          { aspirational_quote: "To be recognized as a leader and expert in my field", intensity: 10 },
+          { aspirational_quote: "To have confidence and self-assurance to take on any challenge", intensity: 9 }
+        ],
+        buyer_language: [
+          { exact_phrase: "hitting a glass ceiling" },
+          { exact_phrase: "passed over for promotions" },
+          { exact_phrase: "need more executive presence" }
+        ],
+        top_pain_points: [
+          { quote: "Feeling like I'm constantly fighting an uphill battle" },
+          { quote: "Lack of clear guidance on how to navigate my career" }
+        ],
+        price_justification: "Premium pricing of $15,000 represents 7-20x ROI within 12 months"
+      },
+      stage3_competitive_analysis: {
+        unique_value_proposition: "Help women in tech achieve recognition through Strategic Visibility Framework - guaranteed results in 6-8 weeks",
+        competitive_pricing_analysis: "Price gap between $1,500 mid-tier and $10,000+ high-end creates opportunity",
+        positioning_gaps: ["Tailored to women in tech", "Proprietary framework", "Speed emphasis"],
+        why_business_wins: "Only solution with outcome guarantee and 1:1 personalization for Power 4%"
+      },
+      stage4_avatar_creation: {
+        avatar_name: "Ava Morales",
+        demographics: {
+          age_range: "42",
+          household_income: "$325,000",
+          location: "San Francisco Bay Area"
+        },
+        price_sensitivity: "medium",
+        price_sensitivity_justification: "$325K income, won't blink at $10K-20K if believes it works",
+        buying_triggers: {
+          optimal_contact_days: ["Tuesday", "Thursday"],
+          optimal_contact_times: ["7:00-8:00am", "8:00-9:00pm"],
+          platform_preferences: ["LinkedIn", "Twitter"]
+        },
+        online_communities: [
+          { platform: "LinkedIn", member_count: "15,000" }
+        ]
+      },
+      stage5_offer_design: {
+        core_offer: {
+          offer_name: "Leadership Breakthrough Accelerator",
+          target_outcome: "Recognition and confidence as a leader"
+        },
+        pricing_tiers: [
+          { tier_name: "Foundation", price: "$9,997", is_recommended: false },
+          { tier_name: "VIP Accelerator", price: "$24,997", is_recommended: true },
+          { tier_name: "Done-With-You Platinum", price: "$49,997", is_recommended: false }
+        ],
+        guarantee: {
+          why_it_works: "Complete program, implement framework - if no results in 6 months, continue at no cost or 100% refund"
+        }
+      }
+    }
+  };
+
+  // Save to localStorage
+  localStorage.setItem('lastResearchReport', JSON.stringify(testResearchData));
+  console.log('✅ Test research data loaded into localStorage');
+
+  // Update prerequisites notice
+  checkPrerequisites();
 
   // Strategic priorities
   form.querySelectorAll('[name="strategic_priorities"]')[0].checked = true;

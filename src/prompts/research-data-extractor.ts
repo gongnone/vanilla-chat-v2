@@ -11,6 +11,17 @@ import type { CompleteResearchData } from "../types/research-stages";
  * and 2,500 tokens for AI output within 24K context window
  */
 export function extractEssentialResearchData(research: CompleteResearchData): string {
+  // Handle missing research data gracefully
+  if (!research) {
+    return `
+MARKET CONTEXT
+No research data available. Offer design will use general assumptions.
+
+RECOMMENDATION
+For best results, complete market research first at /research.
+`.trim();
+  }
+
   const {
     stage1_market_analysis: s1,
     stage2_buyer_psychology: s2,
