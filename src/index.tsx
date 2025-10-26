@@ -4,6 +4,7 @@ import { renderer } from "./renderer";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { Ai } from "@cloudflare/workers-types";
 import { ResearchFormPage } from "./components/research-form";
+import { OfferDesignPage } from "./components/offer-design-form";
 import type { BusinessContext } from "./types";
 
 // Import multi-stage prompt builders
@@ -23,6 +24,29 @@ import type {
   Stage5OfferDesign,
   CompleteResearchData,
 } from "./types/research-stages";
+
+// Import offer generation prompt builders
+import { buildStage7OfferRationalePrompt } from "./prompts/stage7-offer-rationale";
+import { buildStage8ValueStackPrompt } from "./prompts/stage8-value-stack";
+import { buildStage9PricingFrameworkPrompt } from "./prompts/stage9-pricing-framework";
+import { buildStage10PaymentPlansPrompt } from "./prompts/stage10-payment-plans";
+import { buildStage11PremiumBonusesPrompt } from "./prompts/stage11-premium-bonuses";
+import { buildStage12PowerGuaranteePrompt } from "./prompts/stage12-power-guarantee";
+import { buildStage13ScarcityUpsellsPrompt } from "./prompts/stage13-scarcity-upsells";
+
+// Import offer generation types
+import type {
+  Stage7OfferRationale,
+  Stage8ValueStack,
+  Stage9PricingFramework,
+  Stage10PaymentPlans,
+  Stage11PremiumBonuses,
+  Stage12PowerGuarantee,
+  Stage13ScarcityUpsells,
+} from "./types/offer-stages";
+
+// Import CompleteOfferContext type
+import type { CompleteOfferContext } from "./types/offer-preferences";
 
 type Bindings = {
   AI: Ai;
@@ -187,6 +211,11 @@ app.post("/api/chat", async (c) => {
 // Research form route
 app.get("/research", (c) => {
   return c.render(<ResearchFormPage />);
+});
+
+// Offer design form route
+app.get("/offer-design", (c) => {
+  return c.render(<OfferDesignPage />);
 });
 
 // Deprecated single-stage endpoint - returns helpful migration message
@@ -587,6 +616,186 @@ app.post("/api/research/synthesize", async (c) => {
       error: 'Report synthesis failed',
       message: error instanceof Error ? error.message : String(error),
     }, 500);
+  }
+});
+
+// =============================================================================
+// Strategic Offer Design Generator - Multi-Stage Architecture (Stages 7-13)
+// =============================================================================
+// Seven sequential AI calls for complete offer design with order bumps and upsells
+// This extends the research data (Stages 1-6) with strategic offer components
+
+// Stage 7: Offer Rationale
+app.post("/api/offer/stage/7", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage7Prompt = buildStage7OfferRationalePrompt(context);
+
+    const result = await callAIStage<Stage7OfferRationale>(
+      c,
+      "Offer Rationale",
+      7,
+      stage7Prompt,
+      2500 // Max tokens for 3 offer options
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 7 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 8: Value Stack
+app.post("/api/offer/stage/8", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage8Prompt = buildStage8ValueStackPrompt(context);
+
+    const result = await callAIStage<Stage8ValueStack>(
+      c,
+      "Value Stack",
+      8,
+      stage8Prompt,
+      2500 // Max tokens for 5-7 components
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 8 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 9: Pricing Framework
+app.post("/api/offer/stage/9", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage9Prompt = buildStage9PricingFrameworkPrompt(context);
+
+    const result = await callAIStage<Stage9PricingFramework>(
+      c,
+      "Pricing Framework",
+      9,
+      stage9Prompt,
+      2500 // Max tokens for pricing strategy
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 9 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 10: Payment Plans
+app.post("/api/offer/stage/10", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage10Prompt = buildStage10PaymentPlansPrompt(context);
+
+    const result = await callAIStage<Stage10PaymentPlans>(
+      c,
+      "Payment Plans",
+      10,
+      stage10Prompt,
+      2000 // Max tokens for 2-3 payment options
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 10 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 11: Premium Bonuses
+app.post("/api/offer/stage/11", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage11Prompt = buildStage11PremiumBonusesPrompt(context);
+
+    const result = await callAIStage<Stage11PremiumBonuses>(
+      c,
+      "Premium Bonuses",
+      11,
+      stage11Prompt,
+      2500 // Max tokens for 3-5 bonuses
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 11 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 12: Power Guarantee
+app.post("/api/offer/stage/12", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage12Prompt = buildStage12PowerGuaranteePrompt(context);
+
+    const result = await callAIStage<Stage12PowerGuarantee>(
+      c,
+      "Power Guarantee",
+      12,
+      stage12Prompt,
+      2500 // Max tokens for 3 guarantee options
+    );
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 12 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Stage 13: Scarcity & Upsells (ORDER BUMPS + UPSELLS)
+app.post("/api/offer/stage/13", async (c) => {
+  try {
+    const context = await c.req.json<CompleteOfferContext>();
+
+    const stage13Prompt = buildStage13ScarcityUpsellsPrompt(context);
+
+    const result = await callAIStage<Stage13ScarcityUpsells>(
+      c,
+      "Scarcity & Upsells",
+      13,
+      stage13Prompt,
+      3000 // Max tokens for 3 order bumps + 2 upsells + scarcity mechanisms
+    );
+
+    // Validate order bumps and upsells
+    if (result.order_bumps.length !== 3) {
+      console.warn('⚠️  Stage 13: Expected exactly 3 order bumps, got', result.order_bumps.length);
+    }
+    if (result.upsells.length !== 2) {
+      console.warn('⚠️  Stage 13: Expected exactly 2 upsells, got', result.upsells.length);
+    }
+
+    // Validate pricing ranges
+    result.order_bumps.forEach((bump, i) => {
+      if (bump.price < 27 || bump.price > 47) {
+        console.warn(`⚠️  Stage 13: Order bump ${i+1} price $${bump.price} outside $27-$47 range`);
+      }
+    });
+    result.upsells.forEach((upsell, i) => {
+      if (upsell.price < 97 || upsell.price > 997) {
+        console.warn(`⚠️  Stage 13: Upsell ${i+1} price $${upsell.price} outside $97-$997 range`);
+      }
+    });
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 13 error:', error);
+    return c.json({ error: String(error) }, 500);
   }
 });
 

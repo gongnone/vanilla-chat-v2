@@ -1,0 +1,206 @@
+{
+  "business_context": {
+    "business_name": "Ashley Shaw Consulting",
+    "current_offer_description": "12-month executive coaching program for women in tech leadership focused on strategic career advancement, executive presence, and navigating corporate politics while maintaining authenticity",
+    "niche": "Executive coaching for women in tech",
+    "specialization_keywords": "women in tech, executive presence, strategic career advancement, authentic leadership, corporate navigation",
+    "business_stage": "growth",
+    "revenue_range": "50k-100k",
+    "preferred_market_category": "wealth",
+    "target_market_hypothesis": "Senior-level women in tech (Directors, VPs, C-suite) aged 35-50",
+    "target_demographics": "Women aged 35-50, tech industry roles (Director+), household income $200K-$500K+, coastal US metros",
+    "target_psychographics": "Achievement-oriented, values authenticity, seeks strategic guidance, willing to invest in career",
+    "current_customers_description": "Mid-career women tech leaders who feel stuck at Director level or struggling with executive presence",
+    "biggest_customer_pain_point": "Feeling invisible or passed over for C-suite promotions despite strong technical track record",
+    "service_type": "coaching",
+    "delivery_format": "1:1",
+    "price_point_current": "$12,000 for 12 months",
+    "desired_price_point": "$25,000 for 12 months",
+    "offer_duration": "12 months",
+    "unique_mechanism": "The Executive Edge Framework - combines neuroscience-based presence training with strategic career mapping",
+    "competitors_offers": "BetterUp ($300/month), Marshall Goldsmith coaching ($25K+), Reforge courses ($2K)"
+  },
+  "research_data": {
+    "stage1_market_analysis": {
+      "market_growth_rate": "11.2% annually",
+      "market_size_2024": "$4.8 billion",
+      "market_size_2025_projected": "$5.3 billion",
+      "bleeding_neck_problem": "Feeling invisible and passed over for C-suite promotions despite proven technical expertise",
+      "purchasing_power": {
+        "average_household_income": "$250,000 - $500,000",
+        "discretionary_spending": "$10,000 - $20,000 per year"
+      },
+      "targetability": {
+        "platform_fit": "LinkedIn, professional networks",
+        "targeting_interests": ["tech leadership", "women in tech", "executive development"],
+        "targeting_behaviors": ["tech conference attendees", "premium learning buyers"],
+        "difficulty_score": 8
+      },
+      "top_20_percent": {
+        "demographics": "Women tech leaders aged 38-45, Director+ roles",
+        "psychographics": "Achievement-driven, values authenticity and strategic thinking",
+        "characteristics": "Proven track record, ready for next level"
+      },
+      "power_4_percent": {
+        "demographics": "Women tech leaders aged 40-45, VP/SVP roles, income $400K-$1M+",
+        "psychographics": "Values strategic advantage and executive presence, sees coaching as investment not expense",
+        "buying_frequency": "Every 18-24 months for major career transitions",
+        "lifetime_value": "$75,000 - $150,000",
+        "differentiation": "Understands that technical excellence alone won't get them to C-suite"
+      }
+    },
+    "stage2_buyer_psychology": {
+      "buyer_language": [
+        {
+          "exact_phrase": "I'm tired of being the smartest person in the room but not getting recognized for it",
+          "context": "Career frustration",
+          "frequency": "Very common",
+          "emotion": "Frustration"
+        },
+        {
+          "exact_phrase": "I want to stop working twice as hard for half the recognition",
+          "context": "Gender dynamics in tech",
+          "frequency": "Common",
+          "emotion": "Exhaustion"
+        },
+        {
+          "exact_phrase": "I need to figure out how to play the game without losing myself",
+          "context": "Authenticity concerns",
+          "frequency": "Common",
+          "emotion": "Internal conflict"
+        }
+      ],
+      "top_fears": [
+        {
+          "fear": "Investing in coaching and still not getting promoted",
+          "intensity": 9,
+          "objection": "What if this doesn't work for me?",
+          "trigger": "Past failed attempts at advancement"
+        },
+        {
+          "fear": "Having to change who they are to succeed",
+          "intensity": 8,
+          "objection": "I don't want to become inauthentic",
+          "trigger": "Seeing other women leaders become someone they're not"
+        }
+      ],
+      "top_desires": [
+        {
+          "desire": "C-suite promotion within 12-18 months",
+          "aspirational_quote": "I want to finally break through to the C-suite and have the impact I know I'm capable of",
+          "emotional_pull": "Achievement and recognition"
+        },
+        {
+          "desire": "Command respect and influence without compromising authenticity",
+          "aspirational_quote": "I want to walk into any room with confidence and be heard",
+          "emotional_pull": "Self-actualization and power"
+        }
+      ],
+      "objections": [
+        {
+          "objection": "Too expensive / can't afford it right now",
+          "frequency": "Common",
+          "real_concern": "ROI unclear, concerned about value"
+        }
+      ]
+    },
+    "stage3_competitive_analysis": {
+      "competitors": [
+        {
+          "name": "BetterUp",
+          "positioning": "Mass-market digital coaching platform",
+          "pricing_model": "$300/month subscription",
+          "strengths": ["Affordable", "Scalable", "Corporate benefits integration"],
+          "weaknesses": ["Generic", "Not specialized for women in tech", "Limited personalization"]
+        },
+        {
+          "name": "Marshall Goldsmith Coaching",
+          "positioning": "Premium executive coaching",
+          "pricing_model": "$25,000+ for executive programs",
+          "strengths": ["Brand recognition", "Proven methodology", "C-suite focus"],
+          "weaknesses": ["Very expensive", "Not gender-specific", "Long waitlists"]
+        }
+      ],
+      "market_gaps": [
+        "Specialized coaching for women tech leaders at the VP/Director level",
+        "Authenticity-focused approach (not 'fake it till you make it')",
+        "Combination of presence training + strategic career mapping"
+      ]
+    },
+    "stage4_avatar_creation": {
+      "avatar_name": "Strategic Sarah",
+      "demographics": {
+        "age": 42,
+        "gender": "Female",
+        "location": "San Francisco Bay Area",
+        "job_title": "VP of Engineering",
+        "income": "$450,000/year total comp",
+        "education": "MS in Computer Science from top university"
+      },
+      "psychographics": {
+        "values": ["Authenticity", "Strategic thinking", "Impact", "Growth"],
+        "personality": "Introverted but ambitious, analytical, values-driven",
+        "lifestyle": "Busy professional, values efficiency and high-ROI investments"
+      },
+      "day_in_life": "Wakes at 6am, meditation + coffee, reviews team OKRs by 7am, back-to-back meetings 9-5pm, feels exhausted by politics, evening family time, late-night strategy thinking about next career move",
+      "buying_decision_criteria": [
+        "Proven track record with women like her",
+        "Clear ROI and strategic approach",
+        "Respects her time and intellect",
+        "Authenticity-focused (not corporate BS)"
+      ],
+      "content_preferences": ["LinkedIn articles", "Tech leadership podcasts", "Case studies", "Data-driven insights"]
+    },
+    "stage5_offer_design": {
+      "recommended_tier": {
+        "tier_name": "Executive Edge Program",
+        "price": 15000,
+        "duration": "12 months",
+        "core_components": [
+          "Bi-weekly 1:1 coaching sessions (24 total)",
+          "Executive presence training",
+          "Strategic career mapping"
+        ],
+        "bonuses": [
+          "C-Suite Interview Prep Kit",
+          "Executive Presence Masterclass recordings"
+        ],
+        "guarantee": "Promotion or partial refund after 12 months"
+      }
+    }
+  },
+  "user_preferences": {
+    "strategic_priorities": [
+      "maximize_conversion_rate",
+      "maximize_lifetime_value",
+      "build_trust_authority"
+    ],
+    "primary_transformation": "Within 12 months, go from overlooked VP/Director to confident C-suite executive who commands respect, gets heard in every room, and achieves the promotion they've earned—while staying completely authentic to who they are",
+    "proof_assets_available": {
+      "testimonials": true,
+      "case_studies": true,
+      "before_after": true,
+      "certifications": false,
+      "media_mentions": false
+    },
+    "pricing_strategy": "premium-positioning",
+    "comfortable_price_range": {
+      "min": 15000,
+      "max": 30000
+    },
+    "proprietary_frameworks": "The Executive Edge Framework (neuroscience-based presence training + strategic career mapping)",
+    "unique_tools_resources": "Executive Presence Scorecard, C-Suite Roadmap Template, Quarterly Board Presentation Builder",
+    "exclusive_access": "Private Slack community of women tech executives, Monthly group mastermind calls",
+    "guarantee_risk_tolerance": "moderate",
+    "emphasize_components": [
+      "transformation_speed",
+      "authenticity",
+      "proven_results"
+    ],
+    "voice_preferences": {
+      "tone": "direct",
+      "avoid_words": "girl boss, empowerment, lean in",
+      "must_include_concepts": "strategic, executive presence, authentic leadership, C-suite ready"
+    }
+  }
+}
