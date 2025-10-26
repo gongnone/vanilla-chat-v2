@@ -378,16 +378,18 @@ function displayOfferResults(completeOffer) {
         ${(stages.stage8.core_components || []).map((comp, i) => `
           <div class="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 rounded-r">
             <p class="font-bold text-purple-900">${i + 1}. ${comp.component_name}</p>
-            <p class="text-sm text-gray-700 mt-1">${comp.what_it_delivers}</p>
-            <p class="text-sm text-purple-700 mt-1"><strong>Value:</strong> ${comp.perceived_value}</p>
+            <p class="text-sm text-gray-700 mt-1"><strong>What it is:</strong> ${comp.what_it_is}</p>
+            <p class="text-sm text-gray-700 mt-1"><strong>What it does:</strong> ${comp.what_it_does}</p>
+            <p class="text-sm text-gray-600 mt-1"><em>Addresses: ${comp.desire_addressed}</em></p>
+            <p class="text-sm text-purple-700 mt-1"><strong>Value:</strong> $${comp.perceived_value}</p>
           </div>
         `).join('')}
         <div class="mt-4 p-4 bg-gradient-to-r from-purple-100 to-purple-50 rounded-lg border-2 border-purple-400">
           <p class="text-xl font-bold text-purple-900">
-            Total Stacked Value: ${stages.stage8.total_stacked_value || 'N/A'}
+            Total Stacked Value: $${stages.stage8.total_perceived_value?.toLocaleString() || 'N/A'}
           </p>
           <p class="text-sm text-purple-800 mt-2">
-            ${stages.stage8.value_justification || ''}
+            ${stages.stage8.value_stack_summary || ''}
           </p>
         </div>
       </div>
@@ -412,12 +414,10 @@ function displayOfferResults(completeOffer) {
           </div>
         </div>
         <div class="mt-4 pt-4 border-t border-green-200">
-          <p class="text-sm font-semibold text-green-900 mb-2">Price Anchors:</p>
-          <ul class="text-sm text-gray-700 space-y-1">
-            <li>• LTV %: ${stages.stage9.ltv_percentage || 'N/A'}</li>
-            <li>• Market Position: ${stages.stage9.market_positioning || 'N/A'}</li>
-            <li>• Competitive Context: ${stages.stage9.competitive_context || 'N/A'}</li>
-          </ul>
+          <p class="text-sm font-semibold text-green-900 mb-2">Pricing Rationale:</p>
+          <p class="text-sm text-gray-700 mb-3">${stages.stage9.pricing_rationale || 'N/A'}</p>
+          <p class="text-sm font-semibold text-green-900 mb-2">Competitive Positioning:</p>
+          <p class="text-sm text-gray-700">${stages.stage9.competitive_positioning || 'N/A'}</p>
         </div>
       </div>
     </section>
@@ -434,8 +434,10 @@ function displayOfferResults(completeOffer) {
           <div class="bg-blue-50 p-4 rounded-lg border-2 ${plan.is_recommended ? 'border-blue-500 ring-2 ring-blue-300' : 'border-blue-200'}">
             ${plan.is_recommended ? '<div class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded mb-2 inline-block">RECOMMENDED</div>' : ''}
             <p class="font-bold text-lg text-blue-900">${plan.plan_name}</p>
-            <p class="text-sm text-gray-700 mt-2">${plan.structure}</p>
-            <p class="text-sm text-blue-700 mt-2"><strong>Best for:</strong> ${plan.best_for}</p>
+            <p class="text-sm text-gray-700 mt-2">${plan.payment_structure}</p>
+            <p class="text-sm text-blue-700 mt-2"><strong>Total:</strong> $${plan.total_price?.toLocaleString()}</p>
+            <p class="text-sm text-blue-700 mt-1"><strong>Incentive:</strong> ${plan.incentive}</p>
+            <p class="text-sm text-gray-700 mt-2"><strong>Best for:</strong> ${plan.best_for}</p>
             <p class="text-xs text-gray-600 mt-3">${plan.conversion_psychology}</p>
           </div>
         `).join('')}
@@ -574,16 +576,25 @@ function displayOfferResults(completeOffer) {
 
 // Helper function to render offer rationale options
 function renderOfferRationaleOption(label, option, isRecommended) {
+  if (!option) return '<p class="text-red-600">Option data missing</p>';
+
+  // Handle differentiation as array or string
+  const differentiation = Array.isArray(option.differentiation)
+    ? option.differentiation.join('; ')
+    : (option.differentiation_strategy || option.differentiation || 'N/A');
+
   return `
     <details class="bg-blue-50 p-4 rounded-lg border-2 ${isRecommended ? 'border-blue-500' : 'border-blue-200'}" ${isRecommended ? 'open' : ''}>
       <summary class="font-bold text-blue-900 cursor-pointer">
         ${label}${isRecommended ? ' ⭐ RECOMMENDED' : ''}
       </summary>
       <div class="mt-3 space-y-2 text-sm">
-        <p><strong class="text-blue-800">Big Promise:</strong> ${option?.big_promise || 'N/A'}</p>
-        <p><strong class="text-blue-800">Unique Mechanism:</strong> ${option?.unique_mechanism || 'N/A'}</p>
-        <p><strong class="text-blue-800">Differentiation:</strong> ${option?.differentiation_strategy || 'N/A'}</p>
-        <p class="text-xs text-gray-600 italic">${option?.why_this_works || ''}</p>
+        <p><strong class="text-blue-800">Big Promise:</strong> ${option.big_promise || 'N/A'}</p>
+        <p><strong class="text-blue-800">Unique Mechanism:</strong> ${option.unique_mechanism_name || option.unique_mechanism || 'N/A'}</p>
+        <p><strong class="text-blue-800">Who It's For:</strong> ${option.who_its_for || 'N/A'}</p>
+        <p><strong class="text-blue-800">Why Now:</strong> ${option.why_now || 'N/A'}</p>
+        <p><strong class="text-blue-800">Differentiation:</strong> ${differentiation}</p>
+        <p class="text-xs text-gray-600 italic mt-2"><strong>Strategic Angle:</strong> ${option.strategic_angle || 'N/A'}</p>
       </div>
     </details>
   `;
