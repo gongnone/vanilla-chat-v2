@@ -474,19 +474,28 @@ function displayOfferResults(completeOffer) {
         🛡️ Power Guarantee
       </h2>
       <div class="space-y-4">
-        ${(stages.stage12.guarantee_options || []).map((option, i) => `
-          <details class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+        ${(stages.stage12.guarantee_options || []).map((option, i) => {
+          const isRecommended = stages.stage12.recommended_guarantee === String(i + 1);
+          return `
+          <details class="bg-green-50 p-4 rounded-lg border-2 ${isRecommended ? 'border-green-500 ring-2 ring-green-300' : 'border-green-300'}" ${isRecommended ? 'open' : ''}>
             <summary class="font-bold text-green-900 cursor-pointer">
               Option ${i + 1}: ${option.guarantee_name || 'Guarantee ' + (i + 1)}
-              ${option.is_recommended ? ' ⭐ RECOMMENDED' : ''}
+              ${isRecommended ? ' ⭐ RECOMMENDED' : ''}
+              <span class="ml-2 text-xs bg-${option.risk_level === 'low' ? 'green' : option.risk_level === 'moderate' ? 'yellow' : 'red'}-200 px-2 py-1 rounded">${option.risk_level || ''} risk</span>
             </summary>
             <div class="mt-3 space-y-2 text-sm">
-              <p class="text-gray-700">${option.guarantee_statement || 'N/A'}</p>
-              <p class="text-green-700"><strong>Why it works:</strong> ${option.why_it_works || 'N/A'}</p>
-              <p class="text-gray-600"><strong>Terms:</strong> ${option.terms || 'N/A'}</p>
+              <p class="text-gray-700"><strong>Terms:</strong> ${option.guarantee_terms || 'N/A'}</p>
+              <p class="text-green-700"><strong>What's Covered:</strong> ${option.whats_covered || 'N/A'}</p>
+              <p class="text-gray-600"><strong>Trigger Conditions:</strong> ${option.trigger_conditions || 'N/A'}</p>
+              <p class="text-gray-600"><strong>Remedy:</strong> ${option.refund_remedy_terms || 'N/A'}</p>
+              <p class="text-sm italic mt-2"><strong>Psychological Impact:</strong> ${option.psychological_impact || 'N/A'}</p>
             </div>
           </details>
-        `).join('')}
+        `}).join('')}
+        <div class="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-300">
+          <p class="text-sm font-semibold text-blue-900">Recommendation:</p>
+          <p class="text-sm text-blue-800 mt-1">${stages.stage12.recommendation_rationale || 'N/A'}</p>
+        </div>
       </div>
     </section>
   `;
