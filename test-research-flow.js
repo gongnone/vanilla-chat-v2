@@ -39,12 +39,8 @@ import { chromium } from '@playwright/test';
 
   console.log('✅ Test data filled\n');
 
-  // Enable 6-stage research flow
-  console.log('☑️  Enabling 6-stage research flow...');
-  await page.check('#multi-stage-toggle');
-  await page.waitForTimeout(500);
-
-  console.log('✅ 6-stage flow enabled\n');
+  // Note: Multi-stage is now the default and only option (no toggle needed)
+  console.log('ℹ️  Multi-stage generation is now default\n');
 
   // Start the research
   console.log('🔬 Starting research generation...\n');

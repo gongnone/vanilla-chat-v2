@@ -14,26 +14,10 @@ export const ResearchFormPage = () => (
           </button>
           <h1 className="text-3xl font-bold text-white">Market Intelligence Generator</h1>
           <p className="mt-2 text-blue-100">
-            Get a professional Market Intelligence Report with offer design in 8-12 minutes
+            Get a comprehensive Market Intelligence Report with complete data in 15-20 minutes
           </p>
-
-          {/* Multi-Stage Beta Toggle */}
-          <div className="mt-4 flex items-center gap-3 text-sm">
-            <label className="flex items-center gap-2 cursor-pointer text-white">
-              <input
-                type="checkbox"
-                id="multi-stage-toggle"
-                onchange="toggleMultiStage(this.checked)"
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="font-medium">Use Beta Multi-Stage Generation</span>
-            </label>
-            <span id="multi-stage-badge" className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">
-              Single-Stage Mode
-            </span>
-          </div>
           <p className="mt-2 text-xs text-blue-200">
-            ✨ Multi-stage: 6 sequential AI calls for complete data, no placeholders (~15-20 min, higher quality)
+            ✨ 6-stage AI analysis for complete, professional reports with no placeholders
           </p>
         </div>
 
@@ -392,12 +376,10 @@ export const ResearchFormPage = () => (
         <div id="loading-state" className="hidden p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Generating Your Research Report...</h3>
-          <p className="text-gray-600">This will take 8-12 minutes for a comprehensive ~6,000 word report. Please don't close this window.</p>
+          <p className="text-gray-600">This will take 15-20 minutes for a comprehensive ~6,000 word report with complete data. Please don't close this window.</p>
           <div className="mt-4 text-sm text-gray-500">
-            <p>Analyzing market data...</p>
-            <p>Extracting buyer language...</p>
-            <p>Designing your offer...</p>
-            <p className="mt-2 text-xs italic">Generating up to 8,000 tokens (~6,000 words)</p>
+            <p>Stage-based generation ensures complete, detailed analysis...</p>
+            <p className="mt-2 text-xs italic">6 sequential AI calls for maximum quality</p>
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 
 let currentStep = 1;
 const totalSteps = 3;
-let useMultiStage = false; // Toggle for multi-stage vs single-stage generation
+// Multi-stage generation is now the default and only option
 
 // Step navigation
 function nextStep(step) {
@@ -364,21 +364,7 @@ function setupReportButtons(fullReport) {
   };
 }
 
-// Toggle multi-stage mode
-function toggleMultiStage(enabled) {
-  useMultiStage = enabled;
-  localStorage.setItem('use-multi-stage', enabled);
-
-  const badge = document.getElementById('multi-stage-badge');
-  if (badge) {
-    badge.textContent = enabled ? '✨ Beta Multi-Stage Enabled' : 'Single-Stage Mode';
-    badge.className = enabled
-      ? 'text-xs px-2 py-1 rounded bg-blue-100 text-blue-800'
-      : 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-600';
-  }
-}
-
-// Form submission
+// Form submission - Always uses multi-stage generation
 document.getElementById('research-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -406,66 +392,12 @@ document.getElementById('research-form').addEventListener('submit', async (e) =>
   // Save context to localStorage
   localStorage.setItem('last-business-context', JSON.stringify(businessContext));
 
+  // Clean up deprecated localStorage keys
+  localStorage.removeItem('use-multi-stage');
+
   try {
-    // Check if multi-stage is enabled
-    if (useMultiStage) {
-      // Use multi-stage generation
-      const fullReport = await generateMultiStageReport(businessContext);
-
-      // Setup export and new report buttons
-      setupReportButtons(fullReport);
-      return;
-    }
-
-    // Otherwise use single-stage generation (original flow)
-    // Stream response from API
-    const response = await fetch('/api/research', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(businessContext)
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    // Show output area
-    document.getElementById('loading-state').classList.add('hidden');
-    document.getElementById('research-output').classList.remove('hidden');
-
-    const reportContent = document.getElementById('report-content');
-    reportContent.innerHTML = '<div class="text-gray-500 italic">Streaming report... This may take 5-10 minutes.</div>';
-
-    // Stream and render markdown
-    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-    let fullReport = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      fullReport += value;
-
-      // Render markdown (using markdown-it loaded from chat page)
-      if (window.markdownit) {
-        reportContent.innerHTML = window.markdownit({
-          html: true,
-          breaks: true,
-          linkify: true
-        }).render(fullReport);
-      } else {
-        // Fallback to plain text with basic formatting
-        reportContent.innerHTML = fullReport
-          .replace(/\n/g, '<br>')
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      }
-
-      // Auto-scroll to bottom as content arrives
-      reportContent.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-
-    // Save final report
-    localStorage.setItem('last-research-report', fullReport);
+    // Generate report using multi-stage approach
+    const fullReport = await generateMultiStageReport(businessContext);
 
     // Setup export and new report buttons
     setupReportButtons(fullReport);
@@ -488,13 +420,6 @@ if (!window.markdownit) {
 // Initialize
 updateStepDisplay();
 updateProgressBar();
-
-// Load multi-stage preference from localStorage
-const savedMultiStage = localStorage.getItem('use-multi-stage');
-if (savedMultiStage === 'true') {
-  useMultiStage = true;
-  toggleMultiStage(true);
-}
 
 // Fill form with test data for quick testing
 function fillTestData() {
@@ -553,4 +478,3 @@ function fillTestData() {
 window.nextStep = nextStep;
 window.prevStep = prevStep;
 window.fillTestData = fillTestData;
-window.toggleMultiStage = toggleMultiStage;

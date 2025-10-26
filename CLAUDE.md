@@ -80,9 +80,9 @@ npx wrangler ai models --json | jq 'reduce .[] as $item ({beta: [], ga: []}; if 
      - `GET /` - Chat interface
      - `POST /api/chat` - Chat API endpoint
      - `GET /research` - Market Intelligence Generator form
-     - `POST /api/research` - Single-stage research report generation (legacy)
-     - `POST /api/research/multi-stage` - Multi-stage research orchestration (recommended)
-     - `POST /api/research/synthesize` - Final report synthesis for multi-stage
+     - `POST /api/research` - Deprecated endpoint (returns 410 Gone)
+     - `POST /api/research/stage/1` through `/api/research/stage/5` - Individual stage endpoints
+     - `POST /api/research/synthesize` - Final report synthesis (Stage 6)
    - Streams AI responses using `hono/streaming`
    - Parses Server-Sent Events from Workers AI
    - Falls back to mock responses when `c.env.AI` is unavailable
@@ -106,13 +106,12 @@ src/
   components/
     research-form.tsx            - Market Intelligence form component
   prompts/
-    master-research-prompt.ts    - Single-stage research prompt (legacy)
     stage1-market-analysis.ts    - Stage 1: Market validation & Power 4%
     stage2-buyer-psychology.ts   - Stage 2: Buyer language, fears, desires
     stage3-competitive-analysis.ts - Stage 3: Competitor intelligence
     stage4-avatar-creation.ts    - Stage 4: Dream customer persona
     stage5-offer-design.ts       - Stage 5: Pricing, messaging, bonuses
-    stage6-report-synthesis.ts   - Stage 6: Final markdown report assembly
+    stage6-report-synthesis-condensed.ts - Stage 6: Final markdown report assembly
 
 public/
   static/
@@ -159,29 +158,28 @@ The code in `src/index.tsx` detects missing AI binding and returns mock response
 4. Uses `streamText()` to stream tokens back to client
 5. Client reads stream via `response.body.pipeThrough(new TextDecoderStream())`
 
-**`/api/research` endpoint (Single-Stage - Legacy):**
-1. Collects 18 business context fields from form
-2. Builds comprehensive prompt using `buildMasterPrompt()`
-3. Calls `c.env.AI.run('@cf/meta/llama-3.1-70b-instruct', { messages, stream: true, max_tokens: 8000 })`
-4. Streams ~6,000 word Market Intelligence Report back to client
-5. **Limitation**: Often produces incomplete reports with placeholders due to token limits
+**Multi-Stage Research Generation (Production):**
 
-**`/api/research/multi-stage` endpoint (Recommended):**
-1. Collects 18 business context fields from form
-2. Executes 6 sequential stages, each with focused AI call:
-   - **Stage 1**: Market Analysis (2K tokens JSON) - Market validation, Power 4% identification
-   - **Stage 2**: Buyer Psychology (2.5K tokens JSON) - Real buyer quotes, fears, desires
-   - **Stage 3**: Competitive Analysis (1.5K tokens JSON) - Specific competitor intelligence
-   - **Stage 4**: Avatar Creation (2K tokens JSON) - Named persona with day-in-life narratives
-   - **Stage 5**: Offer Design (2.5K tokens JSON) - 3-tier pricing, marketing messages
-3. Returns `CompleteResearchData` object with all JSON data
-4. Frontend then calls `/api/research/synthesize` for final report
+The Market Intelligence Generator uses a 6-stage architecture for complete, high-quality reports:
 
-**`/api/research/synthesize` endpoint:**
-1. Receives `CompleteResearchData` from multi-stage + original `BusinessContext`
-2. Builds Stage 6 prompt using `buildStage6ReportSynthesisPrompt()` with ALL data
-3. Streams final markdown report (6K tokens) using complete data from Stages 1-5
-4. **Result**: 100% complete report with NO placeholders - all sections filled with specific data
+**Stage Endpoints** (`/api/research/stage/1` through `/api/research/stage/5`):
+1. **Stage 1** - Market Analysis (2.5K tokens JSON): Market validation, Power 4% identification
+2. **Stage 2** - Buyer Psychology (2.5K tokens JSON): Real buyer quotes, fears, desires
+3. **Stage 3** - Competitive Analysis (2K tokens JSON): Specific competitor intelligence
+4. **Stage 4** - Avatar Creation (2.5K tokens JSON): Named persona with day-in-life narratives
+5. **Stage 5** - Offer Design (2.5K tokens JSON): 3-tier pricing, marketing messages
+
+Each stage returns structured JSON data that feeds into subsequent stages.
+
+**Synthesis Endpoint** (`/api/research/synthesize`):
+1. Receives `CompleteResearchData` from all 5 stages + original `BusinessContext`
+2. Builds condensed Stage 6 prompt using `buildStage6ReportSynthesisPromptCondensed()`
+3. Streams final markdown report (~8K tokens) using complete data from Stages 1-5
+4. **Result**: 100% complete ~6,000 word report with NO placeholders
+
+**Legacy Endpoint** (`/api/research`):
+- Returns 410 Gone with migration guidance
+- Previously used single-stage generation (removed for quality reasons)
 
 ## Configuration Files
 
@@ -247,45 +245,26 @@ Accept that local dev cannot test real AI. Solutions:
 
 - **3-Step Wizard Form**: Collects 18 business context fields across 3 progressive steps
 - **Fill Test Data Button**: Development tool (🧪 button in header) auto-fills form with realistic test data
-- **Multi-Stage Generation** (Beta): 6 sequential AI calls for complete data, NO placeholders
-- **Single-Stage Generation** (Legacy): Fast but often incomplete with placeholder text
+- **Multi-Stage Generation**: 6 sequential AI calls for complete data, NO placeholders
 - **Progress Tracking**: Real-time status updates for each stage (⏳ → ✅)
 - **Client-side State**: Form data and reports saved to LocalStorage for persistence
 
-### Generation Modes
+### Generation Architecture
 
-**Single-Stage (Legacy):**
-- Time: 8-12 minutes
-- Cost: ~$0.13 per report
-- Quality: Often incomplete with `[placeholder]` text
-- Use case: Quick drafts, testing
-
-**Multi-Stage (Recommended):**
+**Multi-Stage (Production):**
 - Time: 15-20 minutes
 - Cost: ~$0.30 per report
 - Quality: 100% complete data, NO placeholders
-- Use case: Client-ready reports, professional deliverables
+- Use case: Professional, client-ready reports
 - Stages: Market Analysis → Buyer Psychology → Competitive Analysis → Avatar Creation → Offer Design → Report Synthesis
-
-### Toggle Between Modes
-
-Users can switch between modes via checkbox in the `/research` page header:
-- **Checkbox unchecked**: Single-stage (default for backward compatibility)
-- **Checkbox checked**: Multi-stage (recommended for quality)
-- Preference saved to LocalStorage
 
 ### Token Budget
 
-**Single-Stage:**
-- Input: ~15K tokens
-- Output: 8K tokens max (24K total limit)
-- **Limitation**: Not enough for complete reports
-
-**Multi-Stage:**
-- 6 separate AI calls, each within limits:
-  - Stage 1-5: ~7K-10.5K total per stage (JSON output)
+**Multi-Stage Architecture:**
+- 6 separate AI calls, each within 24K context window:
+  - Stages 1-5: ~7K-10.5K total per stage (JSON output)
   - Stage 6: ~21K total (Markdown synthesis)
-- **Advantage**: Each stage focused, complete data guaranteed
+- **Advantage**: Each stage focused, complete data guaranteed, no placeholders
 
 ### Development Testing
 
@@ -294,9 +273,8 @@ For rapid testing without filling the 18-field form manually:
 1. Navigate to `/research`
 2. Click **"🧪 Fill Test Data"** button (top-right corner)
 3. Form auto-populates and advances to Step 3
-4. **Toggle Multi-Stage** (checkbox in header) for best results
-5. Click "Generate Research Report"
-6. Watch 6 stages complete: 📊 → 🧠 → 🎯 → 👤 → 💎 → 📝
+4. Click "Generate Research Report"
+5. Watch 6 stages complete: 📊 → 🧠 → 🎯 → 👤 → 💎 → 📝
 
 Test data features realistic executive coaching business context (Ashley Shaw Consulting - women in tech leadership).
 

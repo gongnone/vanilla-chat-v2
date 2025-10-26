@@ -38,7 +38,7 @@ Complete changelog for Stage 6 Report Synthesis bug fixes. Documents two critica
 - **[RESEARCH-GENERATOR.md](../RESEARCH-GENERATOR.md)** - Feature documentation
   - User-facing feature description
   - 3-step wizard form
-  - Single-stage vs Multi-stage generation
+  - 6-stage generation architecture
   - Test data tools
   - Output format
 

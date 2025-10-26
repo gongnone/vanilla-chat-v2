@@ -5,14 +5,13 @@ Comprehensive market research and offer design tool powered by Cloudflare Worker
 ## Features
 
 - **18-Field Context Collection** - 3-step wizard form captures complete business context
-- **Multi-Stage Generation** (Beta) - 6 sequential AI calls for complete data with NO placeholders
-- **Single-Stage Generation** (Legacy) - Fast generation that may include placeholder text
-- **AI-Powered Analysis** - Generates comprehensive market research reports
+- **6-Stage Generation Architecture** - Sequential AI calls for complete data with NO placeholders
+- **AI-Powered Analysis** - Generates comprehensive market research reports (~6,000 words)
 - **Real-Time Progress Tracking** - Visual status updates for each stage (⏳ → ✅)
 - **Comprehensive Coverage** - Market validation, buyer psychology, competitive intelligence, avatar creation, offer design
 - **Streaming Results** - Real-time report generation with live markdown rendering
 - **Quality Validation** - Client-side checks ensure detailed inputs for better outputs
-- **LocalStorage Persistence** - Saves reports, preferences, and context for later reference
+- **LocalStorage Persistence** - Saves reports and context for later reference
 
 ## How to Use
 
@@ -47,37 +46,23 @@ Visit `/research` on your deployed site (or locally at `http://localhost:8788/re
 - Unique mechanism
 - Competitors' offers (optional)
 
-### 3. Choose Generation Mode
+### 3. Generate Report
 
-**Multi-Stage (Recommended for Quality):**
-- Enable "Use Beta Multi-Stage Generation" checkbox in header
-- Takes 15-20 minutes
-- Generates reports with 100% complete data, NO placeholders
-- 6 visible stages with progress tracking
+Click "Generate Research Report" and watch as the AI creates your comprehensive report through 6 sequential stages:
 
-**Single-Stage (Fast but may be incomplete):**
-- Leave checkbox unchecked
-- Takes 8-12 minutes
-- May include `[placeholder]` text in some sections
-- Good for quick drafts
+**6-Stage Generation Process:**
+- 📊 **Stage 1:** Market Analysis - Growth rate, market size, Power 4% identification
+- 🧠 **Stage 2:** Buyer Psychology - Real buyer quotes, fears, desires, language patterns
+- 🎯 **Stage 3:** Competitive Analysis - Specific competitor intelligence and differentiation opportunities
+- 👤 **Stage 4:** Avatar Creation - Named persona with day-in-life narratives and decision criteria
+- 💎 **Stage 5:** Offer Design - 3-tier pricing, marketing messages, bonuses, guarantees
+- 📝 **Stage 6:** Report Synthesis - Complete ~6,000 word markdown report with all data
 
-### 4. Generate Report
+**Generation Time:** 15-20 minutes
+**Quality:** 100% complete data with NO placeholders
+**Output:** Professional, client-ready market intelligence report
 
-Click "Generate Research Report" and watch as the AI creates:
-
-**Multi-Stage Mode (6 Stages):**
-- 📊 **Stage 1:** Market Analysis - Growth rate, Power 4% identification
-- 🧠 **Stage 2:** Buyer Psychology - Real buyer quotes, fears, desires
-- 🎯 **Stage 3:** Competitive Analysis - Specific competitor intelligence
-- 👤 **Stage 4:** Avatar Creation - Named persona with day-in-life narratives
-- 💎 **Stage 5:** Offer Design - 3-tier pricing, marketing messages, bonuses
-- 📝 **Stage 6:** Report Synthesis - Complete markdown report with all data
-
-**Single-Stage Mode (Legacy):**
-- Generates report in one streaming call
-- May include placeholder text if token limits exceeded
-
-### 5. Export & Use
+### 4. Export & Use
 
 - Copy to clipboard
 - Save to your documents
@@ -123,30 +108,44 @@ Click "Generate Research Report" and watch as the AI creates:
 
 ```
 src/
-  types.ts                              # BusinessContext interface
+  types.ts                                    # BusinessContext interface
+  types/
+    research-stages.ts                        # Stage output interfaces
   prompts/
-    master-research-prompt.ts           # 18-field prompt template
+    stage1-market-analysis.ts                 # Stage 1 prompt
+    stage2-buyer-psychology.ts                # Stage 2 prompt
+    stage3-competitive-analysis.ts            # Stage 3 prompt
+    stage4-avatar-creation.ts                 # Stage 4 prompt
+    stage5-offer-design.ts                    # Stage 5 prompt
+    stage6-report-synthesis-condensed.ts      # Stage 6 synthesis prompt
   components/
-    research-form.tsx                   # 3-step wizard JSX
-  index.tsx                             # Routes: /research, /api/research
+    research-form.tsx                         # 3-step wizard JSX
+  index.tsx                                   # All routes and endpoints
 
 public/static/
-  research.js                           # Form logic, validation, streaming
+  research.js                                 # Form logic, multi-stage orchestration
 ```
 
-### API Endpoint
+### API Endpoints
 
-**POST /api/research**
+**Stage Endpoints (POST):**
+- `/api/research/stage/1` - Market Analysis (2.5K tokens JSON)
+- `/api/research/stage/2` - Buyer Psychology (2.5K tokens JSON)
+- `/api/research/stage/3` - Competitive Analysis (2K tokens JSON)
+- `/api/research/stage/4` - Avatar Creation (2.5K tokens JSON)
+- `/api/research/stage/5` - Offer Design (2.5K tokens JSON)
 
-Request body: `BusinessContext` object with all 18 fields
+**Synthesis Endpoint (POST):**
+- `/api/research/synthesize` - Final Report (8-12K tokens Markdown)
 
-Response: Streaming markdown report (8,000 tokens = ~6,000 words)
+**Legacy Endpoint (POST):**
+- `/api/research` - Returns 410 Gone (deprecated)
 
 AI Configuration:
 - Model: `@cf/meta/llama-3.1-70b-instruct`
-- max_tokens: 8,000 (reduced to fit within 24K context window)
-- Context window: 24,000 tokens (model limit)
-- Typical usage: ~15K input + 8K output = ~23K total
+- Context window: 24,000 tokens per call
+- Each stage optimized to stay within limits
+- Stage 6 uses condensed prompts to fit synthesis data
 
 ### Local Development
 
@@ -179,16 +178,8 @@ Visit: `https://vanilla-chat-demo-tmpl-al4.pages.dev/research`
 
 ## Cost Estimates
 
-**Single-Stage (Legacy):**
-- **Per Report:** ~$0.13
-- **Token Breakdown:**
-  - Input: ~15,000 tokens (prompt) = $0.05
-  - Output: 8,000 tokens (report) = $0.08
-  - Total: ~$0.13 per report
-- **Limitation:** Often incomplete with placeholders
-
-**Multi-Stage (Recommended):**
-- **Per Report:** ~$0.30 (2.3x more expensive)
+**6-Stage Architecture:**
+- **Per Report:** ~$0.30
 - **Token Breakdown:**
   - Stage 1: ~7K total tokens
   - Stage 2: ~9.5K total tokens
@@ -196,25 +187,25 @@ Visit: `https://vanilla-chat-demo-tmpl-al4.pages.dev/research`
   - Stage 4: ~10K total tokens
   - Stage 5: ~10.5K total tokens
   - Stage 6: ~21K total tokens
-  - Total: ~65K tokens across all 6 calls
+  - **Total:** ~65K tokens across all 6 calls
 - **Value:** 100% complete data with NO placeholders
 
-**Monthly (100 reports):**
-- Single-Stage: ~$13
-- Multi-Stage: ~$30
-- **ROI:** Higher cost justified by complete, actionable reports
+**Monthly Usage (100 reports):**
+- **Cost:** ~$30/month
+- **ROI:** Professional-quality reports justify cost
+- **Quality:** Every section filled with specific, actionable data
 
 **No additional services required** (uses existing Workers AI binding)
 
 ## Tips for Best Results
 
-1. **Use Multi-Stage Mode** - Enable the beta toggle for complete reports with NO placeholders
-2. **Be detailed** - More context = better insights (especially important for multi-stage)
-3. **Use specific language** - Include exact phrases your customers use
-4. **Fill optional fields** - Competitors and current customers add valuable context
-5. **Review quality warnings** - Accept them if you're okay with shorter insights
-6. **Save your report** - Use copy button to save to your documents
-7. **Be patient** - Multi-stage takes 15-20 minutes but delivers professional-quality reports
+1. **Be detailed** - More context = better insights across all 6 stages
+2. **Use specific language** - Include exact phrases your customers use
+3. **Fill optional fields** - Competitors and current customers add valuable context for competitive analysis
+4. **Review quality warnings** - Accept them if you're okay with shorter insights
+5. **Save your report** - Use copy button to save to your documents
+6. **Be patient** - Generation takes 15-20 minutes but delivers professional-quality reports
+7. **Watch stage progress** - Each stage emoji (⏳ → ✅) shows real-time progress
 
 ## Quality Validation
 
@@ -253,27 +244,23 @@ Reports are structured markdown with:
 - Ensure minimum lengths for detailed fields
 
 **"Generation taking too long"**
-- **Single-Stage:** 8-12 minutes
-- **Multi-Stage:** 15-20 minutes (worth the wait for complete data)
+- **Normal Duration:** 15-20 minutes for 6-stage generation
 - Don't close the browser window during generation
 - Check browser console for errors
 - Use `wrangler pages deployment tail` to see real-time progress logs
+- Each stage has its own timeout (45-60 seconds)
 
-**"Report has placeholder text like [Fear 2] or [Competitor 1]"**
-- This happens with single-stage generation when token limits are exceeded
-- **Solution:** Enable "Use Beta Multi-Stage Generation" toggle
-- Multi-stage guarantees NO placeholders - every section filled with real data
-
-**"Multi-stage stuck on a stage"**
+**"Stage stuck or failing"**
 - Each stage has 3 retry attempts with exponential backoff
 - Check browser console for error messages
 - Check `wrangler pages deployment tail` for backend errors
 - If persistent, refresh and try again (form data is saved in LocalStorage)
+- Look for specific stage number in error message
 
 **"Report cut off or too short"**
-- Ensure you're using multi-stage mode for complete reports
-- Check logs to confirm all 6 stages completed
-- Single-stage limited to 8,000 tokens and may be incomplete
+- Verify all 6 stages completed (all show ✅)
+- Check logs to confirm synthesis stage (Stage 6) completed
+- Refresh page and check LocalStorage for saved report
 
 ## Future Enhancements
 
