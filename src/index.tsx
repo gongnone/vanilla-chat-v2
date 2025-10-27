@@ -5,7 +5,9 @@ import { EventSourceParserStream } from "eventsource-parser/stream";
 import { Ai } from "@cloudflare/workers-types";
 import { ResearchFormPage } from "./components/research-form";
 import { OfferDesignPage } from "./components/offer-design-form";
+import { ContentStrategyPage } from "./components/content-strategy-form";
 import type { BusinessContext } from "./types";
+import { getStageModel, getStageMaxTokens } from "./model-config";
 
 // Import multi-stage prompt builders
 import { buildStage1MarketAnalysisPrompt } from "./prompts/stage1-market-analysis";
@@ -48,11 +50,34 @@ import type {
 // Import CompleteOfferContext type
 import type { CompleteOfferContext } from "./types/offer-preferences";
 
+// Import content strategy prompt builders
+import { buildStage17ContentPillarsPrompt } from "./prompts/stage17-pillars";
+
+// Import content strategy types
+import type { ContentPillarStrategy } from "./types/content-stages";
+
 type Bindings = {
   AI: Ai;
+  AI_GATEWAY_NAME?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// AI Gateway configuration helper
+// Routes all AI requests through Cloudflare AI Gateway for monitoring and caching
+const getGatewayConfig = (gatewayName?: string) => {
+  if (!gatewayName) {
+    return {}; // No gateway configuration if missing gateway name
+  }
+
+  return {
+    gateway: {
+      id: gatewayName, // Just the gateway name (e.g., "observe") - Workers AI binding handles account routing
+      skipCache: false, // Enable caching for improved performance
+      cacheTtl: 3360,   // Cache TTL in seconds (~1 hour)
+    }
+  };
+};
 
 app.use(renderer);
 
@@ -173,10 +198,14 @@ app.post("/api/chat", async (c) => {
 
   while (successfulInference === false && retryCount < MAX_RETRIES) {
     try {
-      eventSourceStream = (await c.env.AI.run(payload.config.model, {
-        messages,
-        stream: true,
-      })) as ReadableStream;
+      eventSourceStream = (await c.env.AI.run(
+        payload.config.model,
+        {
+          messages,
+          stream: true,
+        },
+        getGatewayConfig(c.env.AI_GATEWAY_NAME)
+      )) as ReadableStream;
       successfulInference = true;
     } catch (err) {
       lastError = err;
@@ -218,6 +247,11 @@ app.get("/offer-design", (c) => {
   return c.render(<OfferDesignPage />);
 });
 
+// Content strategy form route
+app.get("/content-strategy", (c) => {
+  return c.render(<ContentStrategyPage />);
+});
+
 // Deprecated single-stage endpoint - returns helpful migration message
 app.post("/api/research", async (c) => {
   return c.json({
@@ -233,9 +267,8 @@ app.post("/api/research", async (c) => {
 // Six sequential AI calls for complete, high-quality research reports
 // Stage-based approach ensures comprehensive data with no placeholder text
 
-// Model configuration - Llama 3.1 70B balances quality and speed for 60s timeout
-const RESEARCH_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 1-3 (good reasoning, fast enough)
-const CREATIVE_MODEL = "@cf/meta/llama-3.1-70b-instruct"; // Stages 4-5 (excellent creative writing)
+// Model configuration now centralized in src/model-config.ts
+// Per-stage model selection enables progressive upgrades and optimal performance
 
 // Helper function to call AI and parse JSON response
 async function callAIStage<T>(
@@ -243,9 +276,12 @@ async function callAIStage<T>(
   stageName: string,
   stageNumber: number,
   prompt: string,
-  maxTokens: number = 2500,
-  modelName: string = RESEARCH_MODEL
+  maxTokens?: number, // Optional: will use config default if not provided
+  modelName?: string  // Optional: will use config model if not provided
 ): Promise<T> {
+  // Get model and max tokens from config if not explicitly provided
+  const effectiveModel = modelName || getStageModel(stageNumber);
+  const effectiveMaxTokens = maxTokens || getStageMaxTokens(stageNumber);
   // Check AI binding
   if (!c.env?.AI) {
     throw new Error('AI binding not available');
@@ -253,11 +289,11 @@ async function callAIStage<T>(
 
   const estimatedInputTokens = Math.ceil(prompt.length / 4);
   console.log(`📍 Stage ${stageNumber}: ${stageName} - Starting...`, {
-    model: modelName,
-    maxTokens,
+    model: effectiveModel,
+    maxTokens: effectiveMaxTokens,
     estimatedInputTokens,
     promptLength: prompt.length,
-    totalEstimatedTokens: estimatedInputTokens + maxTokens,
+    totalEstimatedTokens: estimatedInputTokens + effectiveMaxTokens,
   });
 
   const startTime = Date.now();
@@ -271,7 +307,7 @@ async function callAIStage<T>(
   let lastError: any;
 
   // Dynamic timeout based on token allocation
-  const TIMEOUT_MS = maxTokens > 2500 ? 60000 : 45000;
+  const TIMEOUT_MS = effectiveMaxTokens > 2500 ? 60000 : 45000;
 
   while (retryCount < MAX_RETRIES) {
     try {
@@ -279,13 +315,14 @@ async function callAIStage<T>(
 
       // Add timeout wrapper (adjust based on expected output size)
       const aiCallPromise = c.env.AI.run(
-        modelName,
+        effectiveModel,
         {
           messages,
-          max_tokens: maxTokens,
+          max_tokens: effectiveMaxTokens,
           stream: false, // CRITICAL: Must be false for JSON responses
           response_format: { type: "json_object" }, // Enable JSON mode for structured output
-        }
+        },
+        getGatewayConfig(c.env.AI_GATEWAY_NAME)
       );
 
       const timeoutPromise = new Promise((_, reject) =>
@@ -359,9 +396,8 @@ app.post("/api/research/stage/1", async (c) => {
       c,
       "Market Analysis",
       1,
-      prompt,
-      2500,
-      RESEARCH_MODEL
+      prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -387,9 +423,8 @@ app.post("/api/research/stage/2", async (c) => {
       c,
       "Buyer Psychology",
       2,
-      prompt,
-      2500, // Reduced from 3000 to match Stage 1's successful allocation
-      RESEARCH_MODEL
+      prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -416,9 +451,8 @@ app.post("/api/research/stage/3", async (c) => {
       c,
       "Competitive Analysis",
       3,
-      prompt,
-      2000,
-      RESEARCH_MODEL
+      prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -446,9 +480,8 @@ app.post("/api/research/stage/4", async (c) => {
       c,
       "Avatar Creation",
       4,
-      prompt,
-      2500,
-      CREATIVE_MODEL
+      prompt
+      // Model and maxTokens will be loaded from config (CRITICAL: Stage 4 uses proven stable model)
     );
 
     return c.json(result);
@@ -477,9 +510,8 @@ app.post("/api/research/stage/5", async (c) => {
       c,
       "Offer Design",
       5,
-      prompt,
-      2500,
-      CREATIVE_MODEL
+      prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -538,8 +570,8 @@ app.post("/api/research/synthesize", async (c) => {
       { role: "user", content: stage6Prompt }
     ];
 
-    // Use same model as Stages 1-5 for consistency and compatibility
-    const SYNTHESIS_MODEL = "@cf/meta/llama-3.1-70b-instruct";
+    // Get model from config (Stage 6 will use configured synthesis model)
+    const SYNTHESIS_MODEL = getStageModel(6);
 
     // More accurate token estimation: ~1 token per 3.5 characters for condensed prompts
     const estimatedInputTokens = Math.ceil(stage6Prompt.length / 3.5);
@@ -572,7 +604,8 @@ app.post("/api/research/synthesize", async (c) => {
             messages,
             stream: true,
             max_tokens: maxOutputTokens, // Dynamically calculated to avoid exceeding context window
-          }
+          },
+          getGatewayConfig(c.env.AI_GATEWAY_NAME)
         )) as ReadableStream;
         successfulInference = true;
       } catch (err) {
@@ -636,8 +669,8 @@ app.post("/api/offer/stage/7", async (c) => {
       c,
       "Offer Rationale",
       7,
-      stage7Prompt,
-      2500 // Max tokens for 3 offer options
+      stage7Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -658,8 +691,8 @@ app.post("/api/offer/stage/8", async (c) => {
       c,
       "Value Stack",
       8,
-      stage8Prompt,
-      2500 // Max tokens for 5-7 components
+      stage8Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -680,8 +713,8 @@ app.post("/api/offer/stage/9", async (c) => {
       c,
       "Pricing Framework",
       9,
-      stage9Prompt,
-      2500 // Max tokens for pricing strategy
+      stage9Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -702,8 +735,8 @@ app.post("/api/offer/stage/10", async (c) => {
       c,
       "Payment Plans",
       10,
-      stage10Prompt,
-      2000 // Max tokens for 2-3 payment options
+      stage10Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -724,8 +757,8 @@ app.post("/api/offer/stage/11", async (c) => {
       c,
       "Premium Bonuses",
       11,
-      stage11Prompt,
-      2500 // Max tokens for 3-5 bonuses
+      stage11Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -746,8 +779,8 @@ app.post("/api/offer/stage/12", async (c) => {
       c,
       "Power Guarantee",
       12,
-      stage12Prompt,
-      2500 // Max tokens for 3 guarantee options
+      stage12Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     return c.json(result);
@@ -768,8 +801,8 @@ app.post("/api/offer/stage/13", async (c) => {
       c,
       "Scarcity & Upsells",
       13,
-      stage13Prompt,
-      3000 // Max tokens for 3 order bumps + 2 upsells + scarcity mechanisms
+      stage13Prompt
+      // Model and maxTokens will be loaded from config
     );
 
     // Validate order bumps and upsells
@@ -795,6 +828,64 @@ app.post("/api/offer/stage/13", async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('❌ Stage 13 error:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// =============================================================================
+// CONTENT STRATEGY GENERATION - Stage 17: Content Pillar Strategy
+// =============================================================================
+// Generate 3-5 strategic content pillars based on research + offer data
+// Integrates buyer psychology, market positioning, and business goals
+
+// Stage 17: Content Pillar Strategy (Depends on Stages 1-2, optionally 7-8)
+app.post("/api/content/stage/17", async (c) => {
+  try {
+    const { context, stage1, stage2, stage7, stage8 } = await c.req.json<{
+      context: BusinessContext;
+      stage1: Stage1MarketAnalysis;
+      stage2: Stage2BuyerPsychology;
+      stage7?: Stage7OfferRationale;
+      stage8?: Stage8ValueStack;
+    }>();
+
+    const stage17Prompt = buildStage17ContentPillarsPrompt(
+      context,
+      stage1,
+      stage2,
+      stage7,
+      stage8
+    );
+
+    const result = await callAIStage<ContentPillarStrategy>(
+      c,
+      "Content Pillars",
+      17,
+      stage17Prompt
+      // Model and maxTokens will be loaded from config
+    );
+
+    // Validate pillar count
+    if (result.pillar_count < 3 || result.pillar_count > 5) {
+      console.warn('⚠️  Stage 17: Expected 3-5 pillars, got', result.pillar_count);
+    }
+
+    // Validate frequency percentages sum to 100
+    const totalFrequency = result.pillars.reduce((sum, p) => sum + p.post_frequency_percentage, 0);
+    if (Math.abs(totalFrequency - 100) > 1) { // Allow 1% rounding error
+      console.warn('⚠️  Stage 17: Pillar frequencies sum to', totalFrequency, 'instead of 100%');
+    }
+
+    // Validate each pillar has 10-15 example topics
+    result.pillars.forEach((pillar, i) => {
+      if (pillar.example_topics.length < 10 || pillar.example_topics.length > 15) {
+        console.warn(`⚠️  Stage 17: Pillar ${i+1} has ${pillar.example_topics.length} topics (expected 10-15)`);
+      }
+    });
+
+    return c.json(result);
+  } catch (error) {
+    console.error('❌ Stage 17 (Content Pillars) failed:', error);
     return c.json({ error: String(error) }, 500);
   }
 });

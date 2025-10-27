@@ -5,3 +5,7 @@ compatibility_date = "2025-01-09"
 
 [ai]
 binding = "AI"
+
+# AI Gateway configuration for monitoring and observability
+[vars]
+AI_GATEWAY_NAME = "observe"
