@@ -443,6 +443,29 @@ export const OfferDesignPage = () => (
                 ✨ Generate New Offer
               </button>
             </div>
+
+            {/* Next Step: Content Strategy */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-bold text-blue-900">✅ Offer Design Complete!</h3>
+                  <p className="mt-2 text-sm text-blue-800">
+                    Next step: Generate your content strategy to build authority and drive traffic to this offer.
+                  </p>
+                  <a
+                    href="/content-strategy"
+                    className="mt-4 inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                  >
+                    🎯 Generate Content Strategy →
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
