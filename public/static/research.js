@@ -363,6 +363,12 @@ function setupReportButtons(fullReport) {
     }
   };
 
+  // Edit research data button
+  document.getElementById('edit-data-btn').onclick = () => {
+    console.log('📝 Opening Research Data Editor');
+    window.openResearchDataEditor();
+  };
+
   // Navigate to offer design
   document.getElementById('design-offer-btn').onclick = () => {
     console.log('📊 Navigating to Offer Design with saved research data');

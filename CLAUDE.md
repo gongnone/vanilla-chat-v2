@@ -117,6 +117,7 @@ public/
   static/
     script.js                    - Client-side chat logic, model list
     research.js                  - Client-side research form logic
+    research-editor.js           - Research Data Editor modal component
     style.css                    - Compiled Tailwind output (generated)
     cloudflare-logo.png
   favicon.ico
@@ -278,6 +279,33 @@ For rapid testing without filling the 18-field form manually:
 
 Test data features realistic executive coaching business context (Ashley Shaw Consulting - women in tech leadership).
 
+### Research Data Editor (Phase 1 MVP)
+
+After generating a research report, users can edit the 15 critical fields that directly impact offer quality:
+
+**How to Access**:
+1. Generate a research report (or use test data)
+2. Click the **"📝 Edit Research Data"** button that appears after generation
+3. Modal editor opens with accordion sections for:
+   - 🧠 Buyer Psychology (10 fields - HIGHEST IMPACT)
+   - 📊 Market Context (5 fields - Medium impact)
+
+**Key Features**:
+- **Pre-populated Fields**: AI-generated data loads automatically for easy editing
+- **Auto-save**: Changes saved to localStorage every 500ms
+- **Modified Indicators**: Yellow highlights and "Modified" badges show edited fields
+- **Character Limits**: Enforced to prevent token budget overflow in offer generation
+- **Reset Controls**: Reset individual fields or all fields back to AI original
+- **LocalStorage Persistence**:
+  - `last-research-data` - Current active data
+  - `last-research-data-modified` - User edited version
+  - `last-research-data-original` - AI-generated original for comparison
+
+**Why Only 15 Fields?**
+Due to the 24K token budget in offer generation, only ~15 fields from 100+ research fields are actually used. These 15 fields were identified through code analysis and have 10x more impact on final offer quality than other fields.
+
+**Documentation**: See `docs/RESEARCH-DATA-EDITOR-IMPLEMENTATION.md` and `docs/RESEARCH-DATA-EDITOR-USER-GUIDE.md` for full details.
+
 ## Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** (this file) - Main development guide
@@ -287,6 +315,9 @@ Test data features realistic executive coaching business context (Ashley Shaw Co
 - **[TESTING.md](TESTING.md)** - Testing procedures and Playwright MCP setup
 - **[docs/](docs/)** - Technical documentation, changelogs, and bug fix records
   - **[docs/STAGE6-BUGFIX-CHANGELOG.md](docs/STAGE6-BUGFIX-CHANGELOG.md)** - Stage 6 synthesis bug fixes (Oct 2025)
+  - **[docs/RESEARCH-DATA-EDITING-ANALYSIS.md](docs/RESEARCH-DATA-EDITING-ANALYSIS.md)** - Analysis and recommendation for Research Data Editor
+  - **[docs/RESEARCH-DATA-EDITOR-IMPLEMENTATION.md](docs/RESEARCH-DATA-EDITOR-IMPLEMENTATION.md)** - Technical implementation details
+  - **[docs/RESEARCH-DATA-EDITOR-USER-GUIDE.md](docs/RESEARCH-DATA-EDITOR-USER-GUIDE.md)** - User guide for the Research Data Editor
 
 ## Testing with Playwright MCP
 

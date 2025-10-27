@@ -427,6 +427,13 @@ export const ResearchFormPage = () => (
                 📋 Copy Report
               </button>
               <button
+                id="edit-data-btn"
+                className="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-colors"
+                title="Edit the 15 critical fields that directly impact offer quality"
+              >
+                📝 Edit Research Data
+              </button>
+              <button
                 id="new-report-btn"
                 className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -451,5 +458,6 @@ export const ResearchFormPage = () => (
     </div>
 
     <script src="/static/research.js"></script>
+    <script src="/static/research-editor.js"></script>
   </div>
 );
