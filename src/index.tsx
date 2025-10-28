@@ -56,6 +56,9 @@ import { buildStage17ContentPillarsPrompt } from "./prompts/stage17-pillars";
 // Import content strategy types
 import type { ContentPillarStrategy } from "./types/content-stages";
 
+// Import form co-pilot utilities
+import { buildCompleteCoPilotPrompt, type CoPilotState, type FieldMetadata, type Message } from "./prompts/copilot-context";
+
 type Bindings = {
   AI: Ai;
   AI_GATEWAY_NAME?: string;
@@ -889,5 +892,168 @@ app.post("/api/content/stage/17", async (c) => {
     return c.json({ error: String(error) }, 500);
   }
 });
+
+// =============================================================================
+// FORM CO-PILOT API
+// =============================================================================
+
+/**
+ * Form Co-Pilot Chat Endpoint
+ *
+ * Provides context-aware AI assistance for filling out the market research form.
+ * Helps users understand marketing jargon, provides examples, and drafts content.
+ *
+ * Token Budget: ~3K input, 400 output (fits within 24K context window)
+ * Model: Llama 3.1 70B Instruct
+ * Cost: ~$0.025 per interaction
+ */
+app.post("/api/form-assist/chat", async (c) => {
+  try {
+    const request = await c.req.json<{
+      userMessage: string;
+      fieldContext: FieldMetadata;
+      formData: Record<string, string>;
+      conversationHistory: Message[];
+      sessionId: string;
+    }>();
+
+    console.log('💬 Form Co-Pilot Chat Request', {
+      timestamp: new Date().toISOString(),
+      sessionId: request.sessionId,
+      field: request.fieldContext.name,
+      messageLength: request.userMessage.length,
+      conversationLength: request.conversationHistory.length,
+    });
+
+    // Check if AI binding is available
+    if (!c.env?.AI) {
+      console.warn("⚠️  AI binding not available - returning helpful fallback");
+      return c.json({
+        message: "I'm having trouble connecting right now, but here's a quick tip: " +
+          `For the "${request.fieldContext.label}" field, ${getFallbackTip(request.fieldContext.name)}`,
+        action: "explain",
+        error: "AI_UNAVAILABLE"
+      });
+    }
+
+    // Build co-pilot state
+    const state: CoPilotState = {
+      formData: request.formData,
+      currentField: request.fieldContext,
+      conversation: request.conversationHistory,
+      sessionId: request.sessionId,
+    };
+
+    // Build complete prompt with context
+    const prompt = buildCompleteCoPilotPrompt(request.userMessage, state);
+
+    console.log('📝 Co-Pilot Prompt Built', {
+      promptLength: prompt.length,
+      estimatedTokens: Math.ceil(prompt.length / 3.5),
+    });
+
+    // Call AI with JSON response format
+    const MODEL = "@cf/meta/llama-3.1-70b-instruct";
+    const MAX_OUTPUT_TOKENS = 800; // Increased from 400 to allow complete responses
+
+    let aiResponse;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+
+    while (retryCount < MAX_RETRIES) {
+      try {
+        aiResponse = await c.env.AI.run(
+          MODEL,
+          {
+            messages: [
+              { role: "user", content: prompt }
+            ],
+            max_tokens: MAX_OUTPUT_TOKENS,
+            temperature: 0.7,
+            stream: false,
+          },
+          getGatewayConfig(c.env.AI_GATEWAY_NAME)
+        );
+        break; // Success - exit retry loop
+      } catch (err) {
+        retryCount++;
+        console.error(`❌ Co-Pilot AI call attempt ${retryCount} failed:`, err);
+        if (retryCount >= MAX_RETRIES) {
+          throw err;
+        }
+        // Wait briefly before retry
+        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+      }
+    }
+
+    // Parse response
+    let parsedResponse: {
+      message: string;
+      suggestedContent?: string;
+      action: 'fill' | 'clarify' | 'validate' | 'explain' | 'redirect';
+    };
+
+    try {
+      // Extract JSON from response
+      const responseText = typeof aiResponse === 'string' ? aiResponse : aiResponse.response || '';
+
+      // Try to find JSON in the response (AI sometimes adds text around it)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedResponse = JSON.parse(jsonMatch[0]);
+      } else {
+        // Fallback: treat entire response as message
+        parsedResponse = {
+          message: responseText.substring(0, 500),
+          action: "explain"
+        };
+      }
+
+      console.log('✅ Co-Pilot Response Generated', {
+        action: parsedResponse.action,
+        messageLength: parsedResponse.message.length,
+        hasSuggestedContent: !!parsedResponse.suggestedContent,
+      });
+
+    } catch (parseError) {
+      console.error('❌ Failed to parse AI response as JSON:', parseError);
+      console.error('Raw response:', aiResponse);
+
+      // Return helpful fallback
+      parsedResponse = {
+        message: "I'm having trouble forming a response. Could you rephrase your question or tell me more specifically what you need help with?",
+        action: "clarify",
+      };
+    }
+
+    return c.json(parsedResponse);
+
+  } catch (error) {
+    console.error('❌ Form Co-Pilot error:', error);
+
+    // Return helpful error message
+    return c.json({
+      message: "I'm having trouble right now. Try describing what you need help with in your own words, or skip this field and come back to it later.",
+      action: "explain",
+      error: "SERVER_ERROR"
+    }, 500);
+  }
+});
+
+/**
+ * Get fallback tip for a specific field (when AI is unavailable)
+ */
+function getFallbackTip(fieldName: string): string {
+  const tips: Record<string, string> = {
+    target_psychographics: "describe your customers' values (what matters to them), beliefs (what they think is true), and lifestyle (how they spend time/money).",
+    unique_mechanism: "describe what makes your approach or method different from competitors. Do you have a framework, philosophy, or unique process?",
+    current_offer_description: "be detailed! Include: what format (1:1, group, course?), who it's for, how long it takes, and what transformation clients get.",
+    target_demographics: "be specific! Include age range, income level, location, education, and family status.",
+    target_market_hypothesis: "describe who you think your ideal customer is in 2-3 sentences.",
+    biggest_customer_pain_point: "what keeps your customers up at night? What problem are they desperately trying to solve?",
+  };
+
+  return tips[fieldName] || "think about what information would help someone understand this aspect of your business.";
+}
 
 export default app;
