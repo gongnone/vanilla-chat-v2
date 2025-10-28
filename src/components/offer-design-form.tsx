@@ -212,7 +212,7 @@ export const OfferDesignPage = () => (
                     name="price_range_min"
                     required
                     min="0"
-                    step="100"
+                    step="1"
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="1000"
                   />
@@ -231,7 +231,7 @@ export const OfferDesignPage = () => (
                     name="price_range_max"
                     required
                     min="0"
-                    step="100"
+                    step="1"
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="25000"
                   />

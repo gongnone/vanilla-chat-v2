@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Check if research data exists
 function checkPrerequisites() {
-  const researchData = localStorage.getItem('lastResearchReport');
+  const researchData = localStorage.getItem('last-research-data');
   const notice = document.getElementById('prerequisites-notice');
 
   if (!researchData && notice) {
@@ -169,7 +169,7 @@ document.getElementById('offer-design-form')?.addEventListener('submit', async (
   }
 
   // Check for research data - REQUIRED
-  const researchDataString = localStorage.getItem('lastResearchReport');
+  const researchDataString = localStorage.getItem('last-research-data');
   if (!researchDataString) {
     alert(
       '⚠️ MARKET RESEARCH REQUIRED\n\n' +
@@ -740,7 +740,7 @@ window.fillOfferTestData = function() {
   };
 
   // Save to localStorage
-  localStorage.setItem('lastResearchReport', JSON.stringify(testResearchData));
+  localStorage.setItem('last-research-data', JSON.stringify(testResearchData));
   console.log('✅ Test research data loaded into localStorage');
 
   // Update prerequisites notice

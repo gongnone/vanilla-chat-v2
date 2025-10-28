@@ -1,6 +1,10 @@
+import { FormCoPilotSidebar } from './form-copilot-sidebar';
+
 export const ResearchFormPage = () => (
-  <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div className="max-w-3xl mx-auto">
+  <>
+    <link rel="stylesheet" href="/static/copilot.css" />
+    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
       <div className="bg-white shadow-xl rounded-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 relative">
@@ -58,7 +62,16 @@ export const ResearchFormPage = () => (
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="What do you sell? How is it delivered? What transformation does it provide? Be detailed - this helps generate better insights."
                 />
-                <p className="mt-1 text-sm text-gray-500">Aim for at least 100 words for best results</p>
+                <div className="flex items-center justify-between mt-1">
+                  <button
+                    type="button"
+                    className="copilot-trigger text-blue-600 text-sm hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    onclick="openCoPilotForField('current_offer_description')"
+                  >
+                    💬 Need help with this?
+                  </button>
+                  <p className="text-sm text-gray-500">Aim for at least 100 words for best results</p>
+                </div>
               </div>
 
               <div>
@@ -196,7 +209,16 @@ export const ResearchFormPage = () => (
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="What do they value? What beliefs drive their decisions? What's their lifestyle like?"
                 />
-                <p className="mt-1 text-sm text-gray-500">Values, beliefs, lifestyle patterns, priorities</p>
+                <div className="flex items-center justify-between mt-1">
+                  <button
+                    type="button"
+                    className="copilot-trigger text-blue-600 text-sm hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    onclick="openCoPilotForField('target_psychographics')"
+                  >
+                    💬 Need help with this?
+                  </button>
+                  <p className="text-sm text-gray-500">Values, beliefs, lifestyle patterns, priorities</p>
+                </div>
               </div>
 
               <div>
@@ -338,7 +360,16 @@ export const ResearchFormPage = () => (
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="What's your secret sauce? Your proprietary method or framework? What makes your approach different?"
                 />
-                <p className="mt-1 text-sm text-gray-500">This is critical - be specific about your unique approach</p>
+                <div className="flex items-center justify-between mt-1">
+                  <button
+                    type="button"
+                    className="copilot-trigger text-blue-600 text-sm hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    onclick="openCoPilotForField('unique_mechanism')"
+                  >
+                    💬 Need help with this?
+                  </button>
+                  <p className="text-sm text-gray-500">This is critical - be specific about your unique approach</p>
+                </div>
               </div>
 
               <div>
@@ -457,7 +488,12 @@ export const ResearchFormPage = () => (
       </div>
     </div>
 
+    {/* Form Co-Pilot Sidebar */}
+    <FormCoPilotSidebar />
+
     <script src="/static/research.js"></script>
     <script src="/static/research-editor.js"></script>
-  </div>
+    <script src="/static/form-copilot.js"></script>
+    </div>
+  </>
 );
