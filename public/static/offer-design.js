@@ -197,10 +197,14 @@ async function generateStrategicOffer(preferences, researchData) {
   // Create progress UI
   createOfferProgressUI();
 
+  // Load business context from localStorage
+  const businessContextString = localStorage.getItem('last-business-context');
+  const businessContext = businessContextString ? JSON.parse(businessContextString) : {};
+
   // Build context
   const context = {
-    business_context: researchData?.context || {},
-    research_data: researchData?.researchData || {},
+    business_context: businessContext,
+    research_data: researchData || {},
     user_preferences: preferences,
   };
 
@@ -247,7 +251,21 @@ async function generateStrategicOffer(preferences, researchData) {
       generated_at: new Date().toISOString(),
     };
 
+    // Save to localStorage with BOTH formats for compatibility
     localStorage.setItem('lastOfferDesign', JSON.stringify(completeOffer));
+
+    // Also save in format expected by content-strategy.js (Stage 17)
+    const offerDataForContentStrategy = {
+      stage7_offer_rationale: stage7,
+      stage8_value_stack: stage8,
+      stage9_pricing_framework: stage9,
+      stage10_payment_plans: stage10,
+      stage11_premium_bonuses: stage11,
+      stage12_power_guarantee: stage12,
+      stage13_scarcity_upsells: stage13,
+      generated_at: new Date().toISOString(),
+    };
+    localStorage.setItem('last-offer-data', JSON.stringify(offerDataForContentStrategy));
 
     // Display results
     displayOfferResults(completeOffer);

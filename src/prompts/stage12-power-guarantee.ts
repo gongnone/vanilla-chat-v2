@@ -31,7 +31,7 @@ ${researchSummary}
 YOUR TASK: Design 3 guarantee options that remove risk and directly address the top fear from research.
 
 Each guarantee must:
-- Directly address TOP FEAR: ${research_data.stage2_buyer_psychology.top_fears[0]?.fear || 'from research'}
+- Directly address TOP FEAR: ${research_data.stage2_buyer_psychology?.top_fears?.[0]?.fear || 'from research'}
 - Be specific and measurable (not vague promises)
 - Align with user's risk tolerance level
 - Be realistic for the business to honor
@@ -68,8 +68,8 @@ GUARANTEE OPTIONS TO DESIGN:
 - Example: "If you complete the program and don't get results, we'll refund you AND you keep everything"
 
 CRITICAL REQUIREMENTS:
-- MUST address top fear: ${research_data.stage2_buyer_psychology.top_fears[0]?.fear || 'from research'}
-- Use buyer language: "${research_data.stage2_buyer_psychology.buyer_language[0]?.exact_phrase || 'from research'}"
+- MUST address top fear: ${research_data.stage2_buyer_psychology?.top_fears?.[0]?.fear || 'from research'}
+- Use buyer language: "${research_data.stage2_buyer_psychology?.buyer_language?.[0]?.exact_phrase || 'from research'}"
 - Recommend the guarantee that matches user's ${user_preferences.guarantee_risk_tolerance} risk tolerance
 - Avoid predatory or misleading terms
 - Make sure guarantee is actually deliverable

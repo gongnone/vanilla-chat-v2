@@ -844,20 +844,27 @@ app.post("/api/offer/stage/13", async (c) => {
 // Stage 17: Content Pillar Strategy (Depends on Stages 1-2, optionally 7-8)
 app.post("/api/content/stage/17", async (c) => {
   try {
-    const { context, stage1, stage2, stage7, stage8 } = await c.req.json<{
+    const { context, stage1, stage2, stage7, stage8, userFeedback } = await c.req.json<{
       context: BusinessContext;
       stage1: Stage1MarketAnalysis;
       stage2: Stage2BuyerPsychology;
       stage7?: Stage7OfferRationale;
       stage8?: Stage8ValueStack;
+      userFeedback?: string;
     }>();
+
+    // Log if feedback is provided
+    if (userFeedback) {
+      console.log('📝 Stage 17: User feedback provided for regeneration:', userFeedback);
+    }
 
     const stage17Prompt = buildStage17ContentPillarsPrompt(
       context,
       stage1,
       stage2,
       stage7,
-      stage8
+      stage8,
+      userFeedback
     );
 
     const result = await callAIStage<ContentPillarStrategy>(
@@ -952,17 +959,17 @@ app.post("/api/form-assist/chat", async (c) => {
       estimatedTokens: Math.ceil(prompt.length / 3.5),
     });
 
-    // Call AI with JSON response format
+    // Call AI with streaming enabled
     const MODEL = "@cf/meta/llama-3.1-70b-instruct";
-    const MAX_OUTPUT_TOKENS = 800; // Increased from 400 to allow complete responses
+    const MAX_OUTPUT_TOKENS = 1200; // Increased for complete responses
 
-    let aiResponse;
+    let aiStream;
     let retryCount = 0;
     const MAX_RETRIES = 3;
 
     while (retryCount < MAX_RETRIES) {
       try {
-        aiResponse = await c.env.AI.run(
+        aiStream = await c.env.AI.run(
           MODEL,
           {
             messages: [
@@ -970,7 +977,7 @@ app.post("/api/form-assist/chat", async (c) => {
             ],
             max_tokens: MAX_OUTPUT_TOKENS,
             temperature: 0.7,
-            stream: false,
+            stream: true, // ✅ ENABLE STREAMING
           },
           getGatewayConfig(c.env.AI_GATEWAY_NAME)
         );
@@ -986,47 +993,49 @@ app.post("/api/form-assist/chat", async (c) => {
       }
     }
 
-    // Parse response
-    let parsedResponse: {
-      message: string;
-      suggestedContent?: string;
-      action: 'fill' | 'clarify' | 'validate' | 'explain' | 'redirect';
-    };
+    // Stream response back to client
+    return streamText(c, async (stream) => {
+      let fullResponse = '';
 
-    try {
-      // Extract JSON from response
-      const responseText = typeof aiResponse === 'string' ? aiResponse : aiResponse.response || '';
+      try {
+        // Parse SSE stream
+        const reader = aiStream.pipeThrough(new TextDecoderStream()).getReader();
 
-      // Try to find JSON in the response (AI sometimes adds text around it)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback: treat entire response as message
-        parsedResponse = {
-          message: responseText.substring(0, 500),
-          action: "explain"
-        };
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Parse SSE events
+          const lines = value.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const token = parsed.response || '';
+                if (token) {
+                  fullResponse += token;
+                  await stream.write(token);
+                }
+              } catch (e) {
+                // Skip malformed JSON
+              }
+            }
+          }
+        }
+
+        console.log('✅ Co-Pilot Response Streamed', {
+          totalLength: fullResponse.length,
+          estimatedTokens: Math.ceil(fullResponse.length / 3.5),
+        });
+
+      } catch (streamError) {
+        console.error('❌ Stream processing error:', streamError);
+        await stream.write('\n\n[Error: Response interrupted. Please try again.]');
       }
-
-      console.log('✅ Co-Pilot Response Generated', {
-        action: parsedResponse.action,
-        messageLength: parsedResponse.message.length,
-        hasSuggestedContent: !!parsedResponse.suggestedContent,
-      });
-
-    } catch (parseError) {
-      console.error('❌ Failed to parse AI response as JSON:', parseError);
-      console.error('Raw response:', aiResponse);
-
-      // Return helpful fallback
-      parsedResponse = {
-        message: "I'm having trouble forming a response. Could you rephrase your question or tell me more specifically what you need help with?",
-        action: "clarify",
-      };
-    }
-
-    return c.json(parsedResponse);
+    });
 
   } catch (error) {
     console.error('❌ Form Co-Pilot error:', error);

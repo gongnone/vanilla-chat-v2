@@ -1,6 +1,6 @@
 import { BusinessContext } from "../types";
 import { Stage1MarketAnalysis, Stage2BuyerPsychology } from "../types/research-stages";
-import { Stage7OfferRationale, Stage8ValueStack } from "../types/offer-stages";
+import { Stage7OfferRationale, Stage8ValueStack, ValueStackComponent } from "../types/offer-stages";
 
 /**
  * Stage 17: Content Pillar Strategy Generator
@@ -10,6 +10,7 @@ import { Stage7OfferRationale, Stage8ValueStack } from "../types/offer-stages";
  * - Buyer psychology (Stage 2)
  * - Offer positioning (Stage 7, optional)
  * - Value stack (Stage 8, optional)
+ * - User feedback for regeneration (optional)
  *
  * Token Budget: ~7K input + 3K output = 10K total
  */
@@ -18,7 +19,8 @@ export function buildStage17ContentPillarsPrompt(
   stage1: Stage1MarketAnalysis,
   stage2: Stage2BuyerPsychology,
   stage7?: Stage7OfferRationale,
-  stage8?: Stage8ValueStack
+  stage8?: Stage8ValueStack,
+  userFeedback?: string
 ): string {
   const {
     business_name,
@@ -30,25 +32,43 @@ export function buildStage17ContentPillarsPrompt(
   } = context;
 
   // Extract top buyer psychology elements (condensed)
-  const topFears = stage2.top_fears.slice(0, 3).map(f => `"${f.name}": ${f.quote}`).join('; ');
-  const topDesires = stage2.top_desires.slice(0, 3).map(d => `"${d.name}": ${d.aspirational_quote}`).join('; ');
-  const topBuyerLanguage = stage2.buyer_language.slice(0, 7).map(bl => `"${bl.exact_phrase}"`).join(', ');
+  const topFears = stage2.top_fears?.slice(0, 3).map(f => `"${f.name}": ${f.quote}`).join('; ') || 'from research';
+  const topDesires = stage2.top_desires?.slice(0, 3).map(d => `"${d.name}": ${d.aspirational_quote}`).join('; ') || 'from research';
+  const topBuyerLanguage = stage2.buyer_language?.slice(0, 7).map(bl => `"${bl.exact_phrase}"`).join(', ') || 'from research';
 
   // Optional: Offer positioning (if available)
   const offerContext = stage7 ? `
 # OFFER POSITIONING (from Strategic Offer Design)
 
-**Unique Mechanism:** ${stage7.recommended_unique_mechanism.mechanism_name}
-**Core Promise:** ${stage7.recommended_unique_mechanism.core_promise}
-**Positioning Angle:** ${stage7.recommended_unique_mechanism.positioning_angle}
+**Unique Mechanism:** ${stage7[stage7.recommended_option].unique_mechanism_name}
+**Core Promise:** ${stage7[stage7.recommended_option].big_promise}
+**Positioning Angle:** ${stage7[stage7.recommended_option].strategic_angle}
 ` : '';
 
   const valueStackContext = stage8 ? `
-**Value Components:** ${stage8.value_components.map(vc => vc.component_name).join(', ')}
+**Value Components:** ${stage8.core_components.map((vc: ValueStackComponent) => vc.component_name).join(', ')}
 **Total Perceived Value:** ${stage8.total_perceived_value}
 ` : '';
 
-  return `You are a content strategy expert specializing in business-to-consumer content marketing. Your task is to create 3-5 strategic "Content Pillars" for ${business_name}.
+  // User feedback for regeneration (if provided)
+  const feedbackSection = userFeedback ? `
+
+# ⚠️ USER FEEDBACK FOR IMPROVEMENT
+
+The user is regenerating the content strategy and has provided the following feedback on the previous version:
+
+"${userFeedback}"
+
+**CRITICAL INSTRUCTION**: Take this feedback seriously and adjust the strategy accordingly. If the user wants:
+- Different tone → Adjust language style throughout
+- More/fewer pillars → Generate the requested number (within 3-5 range)
+- Different focus → Emphasize the requested themes
+- Specific changes → Apply them to relevant pillars
+
+Your goal is to address the feedback while maintaining strategic quality and alignment with research data.
+` : '';
+
+  return `You are a content strategy expert specializing in business-to-consumer content marketing. Your task is to create 3-5 strategic "Content Pillars" for ${business_name}.${feedbackSection}
 
 # WHAT ARE CONTENT PILLARS?
 
