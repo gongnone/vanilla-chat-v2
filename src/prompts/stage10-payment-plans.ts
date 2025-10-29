@@ -54,8 +54,8 @@ PAYMENT PLAN STRATEGY GUIDELINES:
 
 CRITICAL REQUIREMENTS:
 - All plans must feel like good options (no "decoy" plans)
-- Price sensitivity from research: ${research_data.stage2_buyer_psychology.objections?.[0]?.objection || 'consider budget constraints'}
-- Income level: ${research_data.stage1_market_analysis.purchasing_power.average_household_income}
+- Price sensitivity from research: ${research_data.stage2_buyer_psychology?.objections?.[0]?.objection || 'consider budget constraints'}
+- Income level: ${research_data.stage1_market_analysis?.purchasing_power?.average_household_income || 'from research'}
 - Avoid payment plans that feel predatory or high-pressure
 - Incentives must be genuine value, not manufactured scarcity
 

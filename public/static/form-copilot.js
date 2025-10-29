@@ -221,17 +221,49 @@ async function sendMessageToCoPilot(userMessage) {
       throw new Error(`API error: ${response.status}`);
     }
 
-    const result = await response.json();
+    // Handle streaming response
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let fullMessage = '';
+    let currentMessageId = null;
 
-    console.log('📥 Co-Pilot response received:', {
-      action: result.action,
-      hasSuggestedContent: !!result.suggestedContent,
+    // Create placeholder message bubble
+    currentMessageId = addMessageToUI({
+      role: 'assistant',
+      content: '',
+      fieldContext: CoPilotState.currentField.name,
     });
 
     CoPilotState.isTyping = false;
     updateTypingIndicator(false);
 
-    return result;
+    // Read stream chunks
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      fullMessage += value;
+
+      // Update message bubble in real-time
+      updateMessageInUI(currentMessageId, fullMessage);
+    }
+
+    console.log('📥 Co-Pilot response streamed:', {
+      messageLength: fullMessage.length,
+    });
+
+    // Store in conversation history
+    CoPilotState.conversation.push({
+      role: 'assistant',
+      content: fullMessage,
+      timestamp: Date.now(),
+      fieldContext: CoPilotState.currentField.name,
+    });
+    CoPilotState.saveToStorage();
+
+    return {
+      message: fullMessage,
+      action: 'explain'
+    };
 
   } catch (error) {
     console.error('❌ Co-Pilot API error:', error);
@@ -330,14 +362,16 @@ function showInitialGreeting() {
 }
 
 /**
- * Append message to chat UI
+ * Append message to chat UI (returns message ID for streaming updates)
  */
 function appendMessageToChat(message) {
   const messagesContainer = document.getElementById('copilot-messages');
-  if (!messagesContainer) return;
+  if (!messagesContainer) return null;
 
+  const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const messageDiv = document.createElement('div');
   messageDiv.className = `copilot-message copilot-message-${message.role}`;
+  messageDiv.dataset.messageId = messageId;
 
   const bubbleDiv = document.createElement('div');
   bubbleDiv.className = 'copilot-message-bubble';
@@ -348,6 +382,36 @@ function appendMessageToChat(message) {
 
   // Scroll to bottom
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  return messageId;
+}
+
+/**
+ * Add message to UI and return its ID (for streaming)
+ */
+function addMessageToUI(message) {
+  return appendMessageToChat(message);
+}
+
+/**
+ * Update existing message content in UI (for streaming)
+ */
+function updateMessageInUI(messageId, newContent) {
+  if (!messageId) return;
+
+  const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+  if (!messageDiv) return;
+
+  const bubbleDiv = messageDiv.querySelector('.copilot-message-bubble');
+  if (bubbleDiv) {
+    bubbleDiv.textContent = newContent;
+
+    // Scroll to bottom to follow streaming
+    const messagesContainer = document.getElementById('copilot-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
 }
 
 /**
@@ -451,19 +515,8 @@ async function handleSendMessage() {
     messageLength: userMessage.length,
   });
 
-  // Get AI response
-  const response = await sendMessageToCoPilot(userMessage);
-
-  if (response) {
-    // Add assistant message
-    const assistantMsg = CoPilotState.addMessage('assistant', response.message);
-    appendMessageToChat(assistantMsg);
-
-    // Show suggested content if provided
-    if (response.suggestedContent) {
-      showSuggestedContent(response.suggestedContent);
-    }
-  }
+  // Get AI response (streaming handles adding assistant message)
+  await sendMessageToCoPilot(userMessage);
 }
 
 /**

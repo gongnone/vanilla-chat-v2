@@ -69,9 +69,9 @@ BONUS DESIGN STRATEGY:
 
 CRITICAL REQUIREMENTS:
 - Address TOP 2 DESIRES:
-  1. ${research_data.stage2_buyer_psychology.top_desires[0]?.aspirational_quote || 'from research'}
-  2. ${research_data.stage2_buyer_psychology.top_desires[1]?.aspirational_quote || 'from research'}
-- Use buyer language: "${research_data.stage2_buyer_psychology.buyer_language[0]?.exact_phrase || 'from research'}"
+  1. ${research_data.stage2_buyer_psychology?.top_desires?.[0]?.aspirational_quote || 'from research'}
+  2. ${research_data.stage2_buyer_psychology?.top_desires?.[1]?.aspirational_quote || 'from research'}
+- Use buyer language: "${research_data.stage2_buyer_psychology?.buyer_language?.[0]?.exact_phrase || 'from research'}"
 - Total bonus value should be $500-$3,000 (adds to value stack without seeming fake)
 - Each bonus must be deliverable with user's resources
 - Avoid bonuses that require ongoing commitment from user

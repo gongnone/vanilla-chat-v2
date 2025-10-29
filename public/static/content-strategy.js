@@ -69,7 +69,7 @@ function loadSavedStrategy() {
 // GENERATE PILLARS - Main Function
 // ============================================================================
 
-async function generatePillars() {
+async function generatePillars(userFeedback = null) {
   try {
     // Get research and offer data from localStorage
     const researchDataStr = localStorage.getItem('last-research-data');
@@ -106,6 +106,12 @@ async function generatePillars() {
     if (offerData) {
       payload.stage7 = offerData.stage7_offer_rationale;
       payload.stage8 = offerData.stage8_value_stack;
+    }
+
+    // Add user feedback if provided (for regeneration)
+    if (userFeedback) {
+      payload.userFeedback = userFeedback;
+      console.log('📝 Including user feedback:', userFeedback);
     }
 
     console.log('🚀 Calling Stage 17: Content Pillars API...');
@@ -385,9 +391,76 @@ function expandTopics(index) {
 }
 
 function regeneratePillars() {
-  if (confirm('Regenerate content pillars? This will replace your current strategy.')) {
-    generatePillars();
-  }
+  // Create custom feedback modal
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+
+  modal.innerHTML = `
+    <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <h3 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 600; color: #1f2937;">
+        🔄 Regenerate Content Strategy
+      </h3>
+      <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px;">
+        Help the AI improve your strategy by describing what you'd like to change:
+      </p>
+      <textarea
+        id="feedback-input"
+        placeholder="Example: Make topics more tactical, add more transformation stories, less corporate tone, I want 5 pillars instead of 4..."
+        style="width: 100%; min-height: 100px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;"
+      ></textarea>
+      <div style="margin-top: 16px; font-size: 12px; color: #9ca3af;">
+        💡 <strong>Tip:</strong> Be specific about what you want to improve. Leave blank to generate without guidance.
+      </div>
+      <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+        <button
+          id="cancel-btn"
+          style="padding: 10px 20px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;"
+        >
+          Cancel
+        </button>
+        <button
+          id="regenerate-btn"
+          style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;"
+        >
+          🔄 Regenerate
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Focus the textarea
+  const textarea = document.getElementById('feedback-input');
+  textarea.focus();
+
+  // Handle cancel
+  document.getElementById('cancel-btn').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+
+  // Handle regenerate
+  document.getElementById('regenerate-btn').addEventListener('click', () => {
+    const feedback = textarea.value.trim();
+    document.body.removeChild(modal);
+
+    if (feedback) {
+      console.log('🎯 Regenerating with user feedback');
+    } else {
+      console.log('🎯 Regenerating without specific feedback');
+    }
+
+    generatePillars(feedback || null);
+  });
+
+  // Close on escape
+  const handleEscape = (e) => {
+    if (e.key === 'Escape' && document.body.contains(modal)) {
+      document.body.removeChild(modal);
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
 }
 
 function savePillarsToStorage() {

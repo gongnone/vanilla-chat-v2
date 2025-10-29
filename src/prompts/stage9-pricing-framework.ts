@@ -38,7 +38,7 @@ You must provide:
 
 1. **RECOMMENDED PRICE** - Single price point within user's comfortable range
 2. **PRICING RATIONALE** - Why this price (3-4 sentences) considering:
-   - Power 4% LTV: ${research_data.stage1_market_analysis.power_4_percent.lifetime_value}
+   - Power 4% LTV: ${research_data.stage1_market_analysis?.power_4_percent?.lifetime_value || 'from research'}
    - Value stack total perceived value (should be from Stage 8)
    - Pricing strategy: ${user_preferences.pricing_strategy}
    - Price sensitivity from research
@@ -56,7 +56,7 @@ You must provide:
    - Payment + financing option
 
 6. **PRICE SENSITIVITY MITIGATION** - Address top objections:
-   - Top fear related to investment: ${research_data.stage2_buyer_psychology.top_fears[0]?.fear || 'from research'}
+   - Top fear related to investment: ${research_data.stage2_buyer_psychology?.top_fears?.[0]?.fear || 'from research'}
    - Budget concerns from avatar
 
 7. **COMPETITIVE POSITIONING** - How this price positions against:
@@ -65,9 +65,9 @@ You must provide:
 
 CRITICAL REQUIREMENTS:
 - Price MUST be within range: ${priceRangeText}
-- Price should be 1-3% of Power 4% LTV (${research_data.stage1_market_analysis.power_4_percent.lifetime_value})
+- Price should be 1-3% of Power 4% LTV (${research_data.stage1_market_analysis?.power_4_percent?.lifetime_value || 'from research'})
 - Justify based on transformation value, not just features
-- Consider income level: ${research_data.stage1_market_analysis.purchasing_power.average_household_income}
+- Consider income level: ${research_data.stage1_market_analysis?.purchasing_power?.average_household_income || 'from research'}
 - Respect pricing strategy: ${user_preferences.pricing_strategy}
 
 OUTPUT FORMAT: Valid JSON only, no markdown.

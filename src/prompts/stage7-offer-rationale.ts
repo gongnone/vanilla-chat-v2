@@ -69,10 +69,10 @@ For each option, provide:
 8. **STRATEGIC ANGLE** - Which of the user's priorities this option emphasizes most
 
 CRITICAL REQUIREMENTS:
-- Use EXACT buyer language from research (phrases like "${research_data.stage2_buyer_psychology.buyer_language[0]?.exact_phrase || 'from research'}")
-- Address TOP FEAR: "${research_data.stage2_buyer_psychology.top_fears[0]?.fear || 'from research'}"
-- Target POWER 4%: ${research_data.stage1_market_analysis.power_4_percent.demographics}
-- Price anchor to LTV: ${research_data.stage1_market_analysis.power_4_percent.lifetime_value}
+- Use EXACT buyer language from research (phrases like "${research_data.stage2_buyer_psychology?.buyer_language?.[0]?.exact_phrase || 'from research'}")
+- Address TOP FEAR: "${research_data.stage2_buyer_psychology?.top_fears?.[0]?.fear || 'from research'}"
+- Target POWER 4%: ${research_data.stage1_market_analysis?.power_4_percent?.demographics || 'from research'}
+- Price anchor to LTV: ${research_data.stage1_market_analysis?.power_4_percent?.lifetime_value || 'from research'}
 - Each option must feel distinctly different in positioning
 
 OUTPUT FORMAT: Valid JSON only, no markdown.

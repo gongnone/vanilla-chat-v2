@@ -47,8 +47,8 @@ For each order bump, provide:
 - Each MUST be priced between $27-$47 (NO EXCEPTIONS)
 - Each must be instantly deliverable (digital products work best)
 - Each must complement main offer without being essential
-- Use buyer language: "${research_data.stage2_buyer_psychology.buyer_language[0]?.exact_phrase || 'from research'}"
-- Address desires: ${research_data.stage2_buyer_psychology.top_desires[0]?.aspirational_quote || 'from research'}
+- Use buyer language: "${research_data.stage2_buyer_psychology?.buyer_language?.[0]?.exact_phrase || 'from research'}"
+- Address desires: ${research_data.stage2_buyer_psychology?.top_desires?.[0]?.aspirational_quote || 'from research'}
 
 ## PART 2: UPSELLS (EXACTLY 2 required)
 

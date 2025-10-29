@@ -63,10 +63,10 @@ For each component, provide:
 6. **PERCEIVED VALUE** - Estimated dollar value if sold separately
 
 CRITICAL REQUIREMENTS:
-- Use EXACT buyer language: "${research_data.stage2_buyer_psychology.buyer_language[0]?.exact_phrase || 'from research'}"
+- Use EXACT buyer language: "${research_data.stage2_buyer_psychology?.buyer_language?.[0]?.exact_phrase || 'from research'}"
 - Address TOP 2 DESIRES:
-  1. ${research_data.stage2_buyer_psychology.top_desires[0]?.aspirational_quote || 'from research'}
-  2. ${research_data.stage2_buyer_psychology.top_desires[1]?.aspirational_quote || 'from research'}
+  1. ${research_data.stage2_buyer_psychology?.top_desires?.[0]?.aspirational_quote || 'from research'}
+  2. ${research_data.stage2_buyer_psychology?.top_desires?.[1]?.aspirational_quote || 'from research'}
 - Incorporate user's unique assets (frameworks, tools, access) where provided
 - Total perceived value should be 3-5x the eventual price point
 - Components must work for ${business_context.delivery_format} delivery format
