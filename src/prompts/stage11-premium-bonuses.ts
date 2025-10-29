@@ -76,7 +76,9 @@ CRITICAL REQUIREMENTS:
 - Each bonus must be deliverable with user's resources
 - Avoid bonuses that require ongoing commitment from user
 
-OUTPUT FORMAT: Valid JSON only, no markdown.
+CRITICAL: YOU MUST RESPOND WITH ONLY VALID JSON. DO NOT include any explanatory text, commentary, or markdown formatting. START your response with { and END with }. No other text is allowed.
+
+OUTPUT FORMAT: Valid JSON only, no markdown, no explanations, no additional text.
 
 {
   "bonuses": [
@@ -94,5 +96,5 @@ OUTPUT FORMAT: Valid JSON only, no markdown.
   "strategic_bonus_summary": "string (2-3 sentences explaining how bonuses work together to increase conversion)"
 }
 
-Generate compelling, specific premium bonuses now.`;
+REMEMBER: Respond with ONLY the JSON object. No text before the opening {. No text after the closing }.`;
 }

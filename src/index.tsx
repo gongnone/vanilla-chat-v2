@@ -308,6 +308,7 @@ async function callAIStage<T>(
   let retryCount = 0;
   const MAX_RETRIES = 3;
   let lastError: any;
+  let responseText = ''; // Declare outside try/catch for error logging
 
   // Dynamic timeout based on token allocation
   const TIMEOUT_MS = effectiveMaxTokens > 2500 ? 60000 : 45000;
@@ -322,6 +323,7 @@ async function callAIStage<T>(
         {
           messages,
           max_tokens: effectiveMaxTokens,
+          temperature: 0.1, // Low temperature for more deterministic JSON generation
           stream: false, // CRITICAL: Must be false for JSON responses
           response_format: { type: "json_object" }, // Enable JSON mode for structured output
         },
@@ -336,7 +338,7 @@ async function callAIStage<T>(
       console.log(`✓ Stage ${stageNumber}: AI response received`);
 
       // Extract the response text
-      const responseText = response.response || JSON.stringify(response);
+      responseText = response.response || JSON.stringify(response);
 
       console.log(`✅ Stage ${stageNumber}: ${stageName} - Raw response received`, {
         responseLength: responseText.length,
@@ -364,6 +366,9 @@ async function callAIStage<T>(
       lastError = err;
       retryCount++;
 
+      // Log first 200 chars of response for debugging malformed JSON
+      const responsePreview = responseText ? responseText.substring(0, 200) : 'No response';
+
       const errorDetails = {
         stage: stageNumber,
         stageName,
@@ -373,6 +378,7 @@ async function callAIStage<T>(
         promptLength: prompt.length,
         estimatedTokens: estimatedInputTokens,
         elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
+        responsePreview, // Add response preview for debugging
       };
 
       console.error(`❌ Stage ${stageNumber} attempt ${retryCount} failed:`, errorDetails);
