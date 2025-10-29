@@ -74,7 +74,7 @@ For each upsell, provide:
 - Each must be a logical "next step" after main offer purchase
 - Position as limited-time offers (one-time offer on thank-you page)
 - Use urgency language: "only available now", "exclusive upgrade", etc.
-- Address Power 4% desires: ${research_data.stage1_market_analysis.power_4_percent.psychographics}
+- Address Power 4% desires: ${research_data.stage1_market_analysis?.power_4_percent?.psychographics || 'from research'}
 
 ## PART 3: SCARCITY MECHANISMS
 
