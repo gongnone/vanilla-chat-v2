@@ -31,10 +31,10 @@ export function buildStage17ContentPillarsPrompt(
     unique_mechanism,
   } = context;
 
-  // Extract top buyer psychology elements (condensed)
-  const topFears = stage2.top_fears?.slice(0, 3).map(f => `"${f.name}": ${f.quote}`).join('; ') || 'from research';
-  const topDesires = stage2.top_desires?.slice(0, 3).map(d => `"${d.name}": ${d.aspirational_quote}`).join('; ') || 'from research';
-  const topBuyerLanguage = stage2.buyer_language?.slice(0, 7).map(bl => `"${bl.exact_phrase}"`).join(', ') || 'from research';
+  // Extract top buyer psychology elements (condensed) - with null-safety
+  const topFears = stage2?.top_fears?.slice(0, 3).map(f => `"${f.name}": ${f.quote}`).join('; ') || 'from research';
+  const topDesires = stage2?.top_desires?.slice(0, 3).map(d => `"${d.name}": ${d.aspirational_quote}`).join('; ') || 'from research';
+  const topBuyerLanguage = stage2?.buyer_language?.slice(0, 7).map(bl => `"${bl.exact_phrase}"`).join(', ') || 'from research';
 
   // Optional: Offer positioning (if available)
   const offerContext = stage7 ? `
@@ -89,10 +89,10 @@ Content pillars are the 3-5 CORE THEMES that all your content revolves around. T
 
 # MARKET INSIGHTS (from Research)
 
-**Market Category:** ${stage1.power_4_percent.demographics}
-**Bleeding Neck Problem:** ${stage1.bleeding_neck_problem}
-**Power 4% Psychographics:** ${stage1.power_4_percent.psychographics}
-**Lifetime Value:** ${stage1.power_4_percent.lifetime_value}
+**Market Category:** ${stage1?.power_4_percent?.demographics || 'from research'}
+**Bleeding Neck Problem:** ${stage1?.bleeding_neck_problem || 'from research'}
+**Power 4% Psychographics:** ${stage1?.power_4_percent?.psychographics || 'from research'}
+**Lifetime Value:** ${stage1?.power_4_percent?.lifetime_value || 'from research'}
 
 # BUYER PSYCHOLOGY (from Research)
 
@@ -186,7 +186,7 @@ Return ONLY valid JSON matching this structure:
 
 # IMPORTANT REMINDERS
 
-1. **Use buyer language**: Incorporate exact phrases from research (e.g., "${stage2.buyer_language[0]?.exact_phrase || 'specific pain point'}")
+1. **Use buyer language**: Incorporate exact phrases from research (e.g., "${stage2?.buyer_language?.[0]?.exact_phrase || 'specific pain point'}")
 2. **Be specific**: "3 frameworks that transformed 50+ leaders" NOT "leadership tips"
 3. **Tie to fears/desires**: Each pillar should clearly address specific buyer psychology insights
 4. **Frequency must sum to 100%**: Ensure post_frequency_percentage across all pillars totals exactly 100
